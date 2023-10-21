@@ -1,0 +1,76 @@
+---
+title: "Project: The Forecasting Tourism 2010 Competition"
+subtitle: "EM1415"
+author: "Marco Solari, 875475"
+format: pdf
+papersize: a4
+geometry:
+  - left=23mm
+  - right=35.5mm
+  - marginparwidth=23mm
+  - top=30mm
+  - bottom=30mm
+toc: true
+number-sections: true
+highlight-style: gruvbox
+code-block-bg: true
+
+mainfont: 'Atkinson Hyperlegible'
+monofont: 'Fira Code'
+mathfont: 'Noto Sans Math'
+sansfont: RobotoSerifNormalRoman-Medium
+fontsize: 9pt        
+
+fig-align: 'center'
+fig-width: 4
+fig-height: 4
+
+include-in-header: 
+  text: |
+    \usepackage{fvextra}
+    \usepackage{listings}
+    \usepackage{lstfiracode}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+    \newfontfamily\sectionfont[]{RobotoSerifNormalRoman-ExtraBold}
+    \newfontfamily\subsectionfont[]{RobotoSerifNormalRoman-Medium}
+    \newfontfamily\subsubsectionfont[]{RobotoSerifNormalRoman-Medium}
+    \addtokomafont{section}{\sectionfont}
+    \addtokomafont{subsection}{\subsectionfont}
+    \addtokomafont{subsubsection}{\subsubsectionfont}
+    \makeatletter
+    \def\verbatim@nolig@list{}
+    \makeatother
+
+reference-location: margin 
+citation-location: margin 
+---
+
+```{r setup}
+libraries_list <- c(
+  "tidyverse"
+)
+
+lapply(
+  libraries_list,
+  require,
+  character.only = TRUE
+)
+```
+
+# Loading Data
+
+```{r}
+data_main <- readr::read_csv(
+  "Data/tourism_data.csv",
+  show_col_types = F
+)
+```
+
+```{r}
+data_main %>% dim
+```
+
+```{r}
+data_main %>% is.na() %>% sum
+```
+
