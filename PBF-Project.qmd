@@ -22,8 +22,8 @@ sansfont: RobotoSerifNormalRoman-Medium
 fontsize: 9pt        
 
 fig-align: 'center'
-fig-width: 4
-fig-height: 4
+fig-width: 10
+fig-height: 8
 
 include-in-header: 
   text: |
@@ -46,14 +46,27 @@ citation-location: margin
 ---
 
 ```{r setup}
+knitr::opts_chunk$set(
+  echo = T,
+  dev = "cairo_pdf"
+)
+
 libraries_list <- c(
-  "tidyverse"
+  "tidyverse",
+  "fpp3"
 )
 
 lapply(
   libraries_list,
   require,
   character.only = TRUE
+)
+
+theme_set(
+  ggthemes::theme_tufte(
+    base_size = 16,
+    base_family = "Atkinson Hyperlegible"
+  )
 )
 ```
 
@@ -72,5 +85,48 @@ data_main %>% dim
 
 ```{r}
 data_main %>% is.na() %>% sum
+```
+
+```{r}
+tourism_full <- data_main %>% 
+  mutate(
+    Year = 1965:2007
+  ) %>% 
+  as_tsibble(
+    index = Year
+  )
+```
+
+```{r}
+tourism_full %>% interval
+```
+
+```{r}
+tmelt <- reshape2::melt(tourism_full,id="Year")
+```
+
+```{r}
+#| fig-width: 12
+#| fig-height: 12
+tmelt %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = log(
+        value
+        ),
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_color_viridis_d(
+    option = "rocket"
+  ) +
+  theme(
+    legend.position = "none"
+    )
 ```
 
