@@ -72,22 +72,22 @@ theme_set(
 
 # Loading Data
 
-```{r}
+```{r load data}
 data_main <- readr::read_csv(
   "Data/tourism_data.csv",
   show_col_types = F
 )
 ```
 
-```{r}
+```{r checkig dimensions and NA 1}
 data_main %>% dim
 ```
 
-```{r}
+```{r checkig dimensions and NA 2}
 data_main %>% is.na() %>% sum
 ```
 
-```{r}
+```{r creating tourism tsibble}
 tourism_full <- data_main %>% 
   mutate(
     Year = 1965:2007
@@ -97,18 +97,49 @@ tourism_full <- data_main %>%
   )
 ```
 
-```{r}
+```{r checking tsibble interval}
 tourism_full %>% interval
 ```
 
-```{r}
+```{r melted tsibble}
 tmelt <- reshape2::melt(tourism_full,id="Year")
 ```
 
-```{r}
+```{r full viz train}
 #| fig-width: 12
 #| fig-height: 12
 tmelt %>% 
+  filter(
+    Year < 2004
+  ) %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = log(
+        value
+        ),
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_color_viridis_d(
+    option = "rocket"
+  ) +
+  theme(
+    legend.position = "none"
+    )
+```
+
+```{r full viz test}
+#| fig-width: 12
+#| fig-height: 12
+tmelt %>% 
+  filter(
+    Year >=2004
+  ) %>% 
   ggplot(
     aes(
       x = Year,
