@@ -162,24 +162,47 @@ tourism_validation <- tourism_full %>%
 > _Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead ($F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$)._
 
 
+## Choosing Measures
 
----
+> _Which measures are suitable if we plan to combine the results for the 518 series? Consider MAE, Average error, MAPE and RMSE._
 
-4. Which measures are suitable if we plan to combine the results for the 518 series? Consider MAE, Average error, MAPE and RMSE.
-5. For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period.
-6. The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts.
-7. Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?
-8. The competition winner, Lee Baker, used an ensemble of three methods:
-- Naive forecasts multiplied by a constant trend (global/local trend: ”globally tourism has grown ”at a rate of 6% annually.”) - Linear regression - Exponentially-weighted linear regression
-(a) Write the exact formula used for generating the first method, in the form Ft+k = ... (k = 1, 2, 3, 4)
-(b) What is the rational behind multiplying the naive forecasts by a constant? (Hint: think empirical and domain knowledge)
-(c) What should be the dependent variable and the predictors in a linear regression model for this data? Explain
-(d) Fit the linear regression model to the first five series and compute forecast errors for the validation period.
-(e) Before choosing a linear regression, the winner described the following process:
-”I examined fitting a polynomial line to the data and using the line to predict future values. I tried using first through fifth order polynomials to find that the lowest MASE was obtained using a first order polynomial (simple regression line). This best fit line was used to predict future values. I also kept the R2 value of the fit for use in blending the results of the prediction.”
-What are two flaws in this approach?
-(f) If we were to consider exponential smoothing, what particular type(s) of exponential smooth- ing are reasonable candidates?
-(g) The winner concludes with possible improvements one being ”an investigation into how to come up with a blending ensemble method that doesn’t use much manual twerking would also be
-2
-of benefit”. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?
-(h) The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?
+## Computing MAPE
+
+> _For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period._
+
+## Computing MASE
+
+> _The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts._
+
+## MAPE Pairs
+
+> _Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?_
+
+# Ensemble Methods
+
+> _The competition winner, Lee Baker, used an ensemble of three methods:_
+>
+>  - _Naive forecasts multiplied by a constant trend_^[Global/local trend: ”globally tourism has grown ”at a rate of 6% annually.”].
+>  - Linear regression.
+>  - Exponentially-weighted linear regression.
+
+> a. _Write the exact formula used for generating the first method, in the form $F_{t+k} = ... (k = 1, 2, 3, 4)$,_
+
+
+> b. _What is the rational behind multiplying the naive forecasts by a constant?_^[Hint: think empirical and domain knowledge.]
+
+> c. _What should be the dependent variable and the predictors in a linear regression model for this data? Explain_.
+
+> d. _Fit the linear regression model to the first five series and compute forecast errors for the validation period._
+
+> e. _Before choosing a linear regression, the winner described the following process:_
+
+”I examined fitting a polynomial line to the data and using the line to predict future values. I tried using first through fifth order polynomials to find that the lowest MASE was obtained using a first order polynomial (simple regression line). This best fit line was used to predict future values. I also kept the $R^2$ value of the fit for use in blending the results of the prediction.”
+
+> _What are two flaws in this approach?_
+
+> f. _If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?_
+
+> g. _The winner concludes with possible improvements one being ”an investigation into how to come up with a blending ensemble method that doesn’t use much manual twerking would also be of benefit”. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?_
+
+> h. _The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?_
