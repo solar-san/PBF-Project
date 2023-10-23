@@ -12,7 +12,7 @@ geometry:
   - bottom=30mm
 toc: true
 number-sections: true
-highlight-style: gruvbox
+highlight-style: breeze
 code-block-bg: true
 
 mainfont: 'Atkinson Hyperlegible'
@@ -83,7 +83,7 @@ data_main <- readr::read_csv(
 )
 ```
 
-```{r checkig dimensions and NA 1}
+```{r checking dimensions and NA 1}
 data_main %>% dim
 ```
 
