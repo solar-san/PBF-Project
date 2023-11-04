@@ -137,6 +137,10 @@ tmelt %>%
   scale_color_viridis_d(
     option = "rocket"
   ) +
+  labs(
+    title = "Tourism Time Series",
+    y = "Value"
+  ) +
   theme(
     legend.position = "none"
     )
@@ -144,7 +148,7 @@ tmelt %>%
 
 A check for `NA`s has already been made while loading data and it showed the presence of a large number of missing values. This is mostly to be attributed to the different starting time of the series. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
 
-Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some outliers and some clues about the presence of cyclicality in some of the series.
+Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
 ## Creating Validation Set
 
@@ -157,9 +161,45 @@ tourism_validation <- tourism_full %>%
   filter(Year >= 2004)
 ```
 
+The logic behind partitioning the series into a _training_ and _validation_ set is to _estimate the forecasting error_: we can train a model or apply a filter to the train set and use it to assess its performance with out-of-sample data. The main disadvantage with this approach is that we are not using all the information available to train our model; moreover, we are not computing _true forecasts_, therefore the accuracy measures from the residuals will be smaller.
+
 ## Naïve Forecasts
 
 > _Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead ($F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$)._
+
+Maybe with summarise?
+
+```{r}
+time_index <- tourism_train %>% select(Year)
+
+batch_NAIVE <- function(data, variable, index = time_index) {
+  
+  sub_tsibble <- as_tsibble(
+        x = variable,
+        index = time_index
+      )
+  
+  fitted_model <- sub_tsibble %>% 
+    model(
+      NAIVE(
+        variable
+    )
+  )
+  
+
+  forecasts <- fitted_model %>% 
+    forecast(h = 4)
+  
+    return(
+      forecasts
+  )
+}
+```
+
+```{r}
+tourism_train
+```
+
 
 
 ## Choosing Measures
