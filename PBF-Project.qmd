@@ -11,7 +11,7 @@ geometry:
   - top=30mm
   - bottom=30mm
 toc: true
-number-sections: true
+number-sections: false
 highlight-style: breeze
 code-block-bg: true
 
@@ -45,11 +45,14 @@ reference-location: margin
 citation-location: margin 
 ---
 
+---
+\newpage
+
 # Setup and Data Loading
 
 ## Setup
 
-```{r setup}
+```{r setup, warning=FALSE, message=FALSE}
 knitr::opts_chunk$set(
   echo = T,
   dev = "cairo_pdf"
@@ -91,6 +94,9 @@ data_main %>% dim
 data_main %>% is.na() %>% sum
 ```
 
+We are missing `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of the observations.
+
+
 ## Creating `tsibble`
 
 ```{r creating tourism tsibble}
@@ -101,10 +107,6 @@ tourism_full <- data_main %>%
   as_tsibble(
     index = Year
   )
-```
-
-```{r checking tsibble interval}
-tourism_full %>% interval
 ```
 
 # Assignment
@@ -154,7 +156,7 @@ Plotting all 518 series does not allow to spot details, such as the presence of 
 
 > _Partition the series into training and validation, so that the last 4 years are in the validation period for each series. What is the logic of such a partitioning? What is the disadvantage?_
 
-```{r}
+```{r creating train and test split}
 tourism_train <- tourism_full %>% 
   filter(Year < 2004)
 tourism_validation <- tourism_full %>% 
@@ -173,21 +175,25 @@ $$
 y_{T + h \ | \ T} = y_T
 $$
 
-Therefore we can produce the forecasts with the following code:
+It follows that we can produce the forecasts with the following code:
 
-```{r}
+```{r naive forecast at 1}
 naive_forecast <- tourism_train %>% 
   filter(
     Year == 2003
-  ) %>% as_data_frame()
+  ) %>% as_tibble()
 ```
 
-```{r}
+`naive_forecast` will contain a `tsibble` with $y_t$ for all the series.
+
+```{r checking dimensions}
 naive_forecast %>% dim
 ```
 
 
-```{r}
+To obtain $F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$:
+
+```{r all naive forecasts tsibble}
 merge(
     x = 2003 + 1:4,
     y = naive_forecast
@@ -202,8 +208,6 @@ merge(
     index = Year
   )
 ```
-
-
 
 ## Choosing Measures
 
@@ -221,7 +225,7 @@ merge(
 
 > _Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?_
 
-# Ensemble Methods
+## Ensemble Methods
 
 > _The competition winner, Lee Baker, used an ensemble of three methods:_
 >
@@ -229,23 +233,23 @@ merge(
 >  - Linear regression.
 >  - Exponentially-weighted linear regression.
 
-> a. _Write the exact formula used for generating the first method, in the form $F_{t+k} = ... (k = 1, 2, 3, 4)$,_
+### a. _Write the exact formula used for generating the first method, in the form $F_{t+k} = ... (k = 1, 2, 3, 4)$,_
 
 
-> b. _What is the rational behind multiplying the naive forecasts by a constant?_^[Hint: think empirical and domain knowledge.]
+### b. _What is the rational behind multiplying the naive forecasts by a constant?_^[Hint: think empirical and domain knowledge.]
 
-> c. _What should be the dependent variable and the predictors in a linear regression model for this data? Explain_.
+### c. _What should be the dependent variable and the predictors in a linear regression model for this data? Explain._.
 
-> d. _Fit the linear regression model to the first five series and compute forecast errors for the validation period._
+### d. _Fit the linear regression model to the first five series and compute forecast errors for the validation period._
 
-> e. _Before choosing a linear regression, the winner described the following process:_
+### e. _Before choosing a linear regression, the winner described the following process:_
 
 ”I examined fitting a polynomial line to the data and using the line to predict future values. I tried using first through fifth order polynomials to find that the lowest MASE was obtained using a first order polynomial (simple regression line). This best fit line was used to predict future values. I also kept the $R^2$ value of the fit for use in blending the results of the prediction.”
 
 > _What are two flaws in this approach?_
 
-> f. _If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?_
+### f. _If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?_
 
-> g. _The winner concludes with possible improvements one being ”an investigation into how to come up with a blending ensemble method that doesn’t use much manual twerking would also be of benefit”. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?_
+### g. _The winner concludes with possible improvements one being ”an investigation into how to come up with a blending ensemble method that doesn’t use much manual twerking would also be of benefit”. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?_
 
-> h. _The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?_
+### h. _The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?_
