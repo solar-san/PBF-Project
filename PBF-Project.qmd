@@ -167,37 +167,40 @@ The logic behind partitioning the series into a _training_ and _validation_ set 
 
 > _Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead ($F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$)._
 
-Maybe with summarise?
+We know that _naïve_ forecasts consist in the last observation, $\forall h$. 
+
+$$
+y_{T + h \ | \ T} = y_T
+$$
+
+Therefore we can produce the forecasts with the following code:
 
 ```{r}
-time_index <- tourism_train %>% select(Year)
-
-batch_NAIVE <- function(data, variable, index = time_index) {
-  
-  sub_tsibble <- as_tsibble(
-        x = variable,
-        index = time_index
-      )
-  
-  fitted_model <- sub_tsibble %>% 
-    model(
-      NAIVE(
-        variable
-    )
-  )
-  
-
-  forecasts <- fitted_model %>% 
-    forecast(h = 4)
-  
-    return(
-      forecasts
-  )
-}
+naive_forecast <- tourism_train %>% 
+  filter(
+    Year == 2003
+  ) %>% as_data_frame()
 ```
 
 ```{r}
-tourism_train
+naive_forecast %>% dim
+```
+
+
+```{r}
+merge(
+    x = 2003 + 1:4,
+    y = naive_forecast
+  ) %>% 
+  mutate(
+    Year = x
+  ) %>% 
+  select(
+    -x
+  ) %>% 
+  as_tsibble(
+    index = Year
+  )
 ```
 
 
