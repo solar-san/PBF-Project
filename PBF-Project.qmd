@@ -182,6 +182,66 @@ tmelt %>%
       )
   )
 ```
+```{r}
+tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>%  
+  group_by(Year) %>% 
+  mutate(
+    median_value = median(value, na.rm = T),
+    mean_value = mean(value, na.rm = T),
+    q_0.25 = quantile(value, probs = .25, na.rm = T),
+    q_0.75 = quantile(value, probs = .75, na.rm = T)
+  ) %>% 
+  ggplot(
+    aes(
+      colour = Time_Interval,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    aes(
+      x = Year,
+      y = mean_value
+    )
+  ) + 
+  geom_line(
+    aes(
+      x = Year,
+      y = median_value
+    )
+  ) + 
+  geom_line(
+    aes(
+      x = Year,
+      y = q_0.25
+    )
+  ) + 
+  geom_line(
+    aes(
+      x = Year,
+      y = q_0.75
+    )
+  ) + 
+  geom_ribbon(
+    aes(
+      ymin = q_0.25,
+      ymax = q_0.75
+    )
+  ) +
+  scale_y_log10()  +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    title = "Tourism Time Series: Quartiles and Mean",
+    y = "Value"
+  )
+```
 
 ```{r}
 #| include: false
