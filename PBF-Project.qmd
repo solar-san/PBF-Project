@@ -21,9 +21,11 @@ mathfont: 'Noto Sans Math'
 sansfont: RobotoSerifNormalRoman-Medium
 fontsize: 9pt        
 
-fig-align: 'center'
+fig-align: center
 fig-width: 10
 fig-height: 8
+df-print: kable
+tbl-cap-location: bottom
 
 include-in-header: 
   text: |
@@ -119,6 +121,20 @@ tourism_full <- data_main %>%
 tmelt <- reshape2::melt(tourism_full,id="Year")
 ```
 
+```{r tmelt dim}
+tmelt %>% dim()
+```
+
+`tmelt` (@tbl-tmelt) contains the _melted_ data frame, which allows us to visualize all 518 time series at once. 
+
+```{r tmelt head}
+#| label: tbl-tmelt
+#| echo: false
+#| tbl-cap: "Melted `tsibble` containing all time series."
+tmelt %>% 
+  tail(10)
+```
+
 ```{r full viz train}
 #| fig-cap: "Printing a legend for 518 different series is not possible. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values."
 #| fig-width: 12
@@ -140,7 +156,7 @@ tmelt %>%
     option = "cividis"
   ) +
   labs(
-    title = "Tourism Time Series",
+    title = "Tourism Time Series: Everything All At Once",
     y = "Value"
   ) +
   theme(
@@ -148,7 +164,7 @@ tmelt %>%
     )
 ```
 
-A check for `NA`s has already been made while loading data and it showed the presence of a large number of missing values. This is mostly to be attributed to the different starting time of the series. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
+A check for `NA`s has already been made while loading data and it showed the presence of a large number of missing values. This is mostly to be attributed to the different starting time of the series. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date. Moreover, we can see that some time series have missing values occurring between the starting and ending point.
 
 Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
@@ -157,9 +173,9 @@ Plotting all 518 series does not allow to spot details, such as the presence of 
 > _Partition the series into training and validation, so that the last 4 years are in the validation period for each series. What is the logic of such a partitioning? What is the disadvantage?_
 
 ```{r creating train and test split}
-tourism_train <- tourism_full %>% 
+train <- tourism_full %>% 
   filter(Year < 2004)
-tourism_validation <- tourism_full %>% 
+validation <- tourism_full %>% 
   filter(Year >= 2004)
 ```
 
@@ -178,7 +194,7 @@ $$
 It follows that we can produce the forecasts with the following code:
 
 ```{r naive forecast at 1}
-naive_forecast <- tourism_train %>% 
+naive_forecast <- train %>% 
   filter(
     Year == 2003
   ) %>% as_tibble()
@@ -190,11 +206,10 @@ naive_forecast <- tourism_train %>%
 naive_forecast %>% dim
 ```
 
-
 To obtain $F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$:
 
 ```{r all naive forecasts tsibble}
-merge(
+naive_full <- merge(
     x = 2003 + 1:4,
     y = naive_forecast
   ) %>% 
@@ -216,6 +231,39 @@ merge(
 ## Computing MAPE
 
 > _For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period._
+
+### Training Period:
+
+### Validation Period:
+
+```{r computing validation residuals}
+uhat_validation <- naive_full - validation
+```
+
+```{r computing percentage residuals}
+p_uhat <- uhat_validation/validation
+```
+
+```{r mape_validation}
+mape_validation <-  100*apply(
+    X = p_uhat %>% select(-Year),
+    FUN = mean,
+    MARGIN = c(1, 2)
+  )
+```
+
+```{r}
+mape_validation %>% dim
+```
+
+This is the MAPE for the first 10 series.
+
+```{r}
+#| tbl-cap: "Naïve forecasts MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
+mape_validation[, 1:10] %>% 
+  round(., digits = 3) %>% 
+  as.data.frame()
+```
 
 ## Computing MASE
 
@@ -243,7 +291,7 @@ merge(
 ### d. _Fit the linear regression model to the first five series and compute forecast errors for the validation period._
 
 ```{r select first 5 series}
-train_subset <- tourism_train %>% 
+train_subset <- train %>% 
   select(
     Y1,
     Y2,
@@ -252,7 +300,6 @@ train_subset <- tourism_train %>%
     Y5
   )
 ```
-
 
 ### e. _Before choosing a linear regression, the winner described the following process:_
 
