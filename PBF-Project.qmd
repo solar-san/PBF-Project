@@ -137,7 +137,7 @@ tmelt %>%
   ) + 
   scale_y_log10() +
   scale_color_viridis_d(
-    option = "rocket"
+    option = "cividis"
   ) +
   labs(
     title = "Tourism Time Series",
