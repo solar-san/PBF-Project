@@ -165,9 +165,12 @@ tmelt %>%
     )
 ```
 
+Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
+
 A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values _in between_ available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
 
 ```{r}
+#| tbl-cap: "Missing observation grouped by time windows."
 tmelt %>% 
   mutate(
     Time_Interval = cut(
@@ -182,7 +185,10 @@ tmelt %>%
       )
   )
 ```
-```{r}
+```{r quartiles and mean plot}
+#| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
+#| fig-width: 12
+#| fig-height: 10
 tmelt %>% 
   mutate(
     Time_Interval = cut(
@@ -199,47 +205,62 @@ tmelt %>%
   ) %>% 
   ggplot(
     aes(
-      colour = Time_Interval,
-      group = variable
+      x = Year
       )
     ) + 
   geom_line(
     aes(
-      x = Year,
-      y = mean_value
-    )
+      y = mean_value,
+    color = viridisLite::mako(1, begin = 1),
+    ),
+    size = 1,
+    linetype = "dotted"
   ) + 
   geom_line(
     aes(
-      x = Year,
-      y = median_value
-    )
+      y = median_value,
+    color = viridisLite::cividis(1, begin = .5)
+    ),
+    size = 1
   ) + 
   geom_line(
     aes(
-      x = Year,
-      y = q_0.25
-    )
+      y = q_0.25,
+    color = viridisLite::cividis(1, begin = .25)
+    ),
+    size = 1
   ) + 
   geom_line(
     aes(
-      x = Year,
-      y = q_0.75
-    )
+      y = q_0.75,
+    color = viridisLite::cividis(1, begin = .75)
+    ),
+    size = 1
   ) + 
   geom_ribbon(
     aes(
       ymin = q_0.25,
-      ymax = q_0.75
-    )
+      ymax = q_0.75,
+    ),
+    fill = "grey95",
+    alpha = .5
   ) +
   scale_y_log10()  +
   scale_color_viridis_d(
-    option = "cividis"
+    labels = c(
+      expression(q[0.25]),
+      expression(q[0.50]),
+      expression(q[0.75]),
+      expression(mu)
+      ),
+    option = "cividis",
+    direction = -1,
+    end = .9
   ) +
   labs(
     title = "Tourism Time Series: Quartiles and Mean",
-    y = "Value"
+    y = "Value",
+    colour = "Index"
   )
 ```
 
@@ -376,8 +397,6 @@ p4 <- tmelt %>%
 
 p1 / p2 / p3 / p4
 ```
-
-Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
 ## Creating Validation Set
 
