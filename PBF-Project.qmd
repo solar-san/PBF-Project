@@ -11,7 +11,6 @@ geometry:
   - top=30mm
   - bottom=30mm
 toc: true
-number-sections: false
 highlight-style: breeze
 code-block-bg: true
 
@@ -24,6 +23,7 @@ fontsize: 9pt
 fig-align: center
 fig-width: 10
 fig-height: 8
+number-sections: true
 df-print: kable
 tbl-cap-location: bottom
 
@@ -62,7 +62,8 @@ knitr::opts_chunk$set(
 
 libraries_list <- c(
   "tidyverse",
-  "fpp3"
+  "fpp3",
+  "patchwork"
 )
 
 lapply(
@@ -79,7 +80,7 @@ theme_set(
 )
 ```
 
-## Loading Data
+## Loading Data {#sec-dataload}
 
 ```{r load data}
 data_main <- readr::read_csv(
@@ -164,7 +165,157 @@ tmelt %>%
     )
 ```
 
-A check for `NA`s has already been made while loading data and it showed the presence of a large number of missing values. This is mostly to be attributed to the different starting time of the series. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date. Moreover, we can see that some time series have missing values occurring between the starting and ending point.
+A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values _in between_ available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
+
+```{r}
+tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>% 
+  group_by(Time_Interval) %>% 
+  summarise(
+    Available_Observations = sum(
+      !is.na(value)
+      )
+  )
+```
+
+```{r}
+#| include: false
+#| eval: false
+#| fig-width: 12
+#| fig-height: 30
+p1 <- tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>% 
+  filter(
+    Time_Interval == "(1964,1975]" |
+    Time_Interval == "(1975,1985]"
+  )  %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = value,
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_y_log10() +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    y = "Value"
+  ) +
+  theme(
+    legend.position = "none"
+    )
+p2 <- tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>% 
+  filter(
+    Time_Interval == "(1985,1995]"
+  )  %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = value,
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_y_log10() +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    y = ""
+  ) +
+  theme(
+    legend.position = "none"
+    )
+p3 <- tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>% 
+  filter(
+    Time_Interval == "(1995,2003]"
+  )  %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = value,
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_y_log10() +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    y = "Value"
+  ) +
+  theme(
+    legend.position = "none"
+    )
+p4 <- tmelt %>% 
+  mutate(
+    Time_Interval = cut(
+      Year,
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+    )
+  ) %>% 
+  filter(
+    Time_Interval == "(2003,2008]"
+  )  %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = value,
+      colour = variable,
+      group = variable
+      )
+    ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_y_log10() +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    y = ""
+  ) +
+  theme(
+    legend.position = "none"
+    )
+
+p1 / p2 / p3 / p4
+```
 
 Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
