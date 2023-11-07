@@ -63,7 +63,8 @@ knitr::opts_chunk$set(
 libraries_list <- c(
   "tidyverse",
   "fpp3",
-  "patchwork"
+  "ggthemes"
+  
 )
 
 lapply(
@@ -137,6 +138,7 @@ tmelt %>%
 ```
 
 ```{r full viz train}
+#| label: fig-every
 #| fig-cap: "Printing a legend for 518 different series is not possible. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values."
 #| fig-width: 12
 #| fig-height: 12
@@ -494,20 +496,22 @@ p_uhat_full <- uhat_full/train
 
 ```{r}
 mape_full <-  100*apply(
-    X = p_uhat_full,
+    X = p_uhat_full %>% select(-Year),
     FUN = mean,
-    MARGIN = c(1, 2)
+    MARGIN = 2,
+    na.rm = T
   )
 ```
 
 ```{r}
-mape_full %>% dim
+mape_full %>% length
 ```
 
 ```{r}
 #| tbl-cap: "Naïve forecasts training MAPE for the first 10 time series from 1998 to 2003."
-mape_full[, 1:10] %>% 
+mape_full[1:10] %>% 
   round(., digits = 2) %>% 
+  t() %>% 
   as_tibble() %>% 
   tail()
 ```
@@ -523,20 +527,22 @@ p_uhat <- uhat_validation/validation
 mape_validation <-  100*apply(
     X = p_uhat %>% select(-Year),
     FUN = mean,
-    MARGIN = c(1, 2)
+    MARGIN = 2,
+    na.rm = T
   )
 ```
 
 ```{r}
-mape_validation %>% dim
+mape_validation %>% length
 ```
 
 This is the MAPE for the first 10 series.
 
 ```{r}
 #| tbl-cap: "Naïve forecasts validation MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
-mape_validation[, 1:10] %>% 
+mape_validation[1:10] %>% 
   round(., digits = 2) %>% 
+  t() %>% 
   as_tibble()
 ```
 
@@ -547,6 +553,44 @@ mape_validation[, 1:10] %>%
 ## MAPE Pairs
 
 > _Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?_
+
+```{r MAPE scatterplot}
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
+ggplot(
+  data = tibble(
+    Training_MAPE = mape_full,
+    Validation_MAPE = mape_validation,
+    Series_Identifier = names(mape_full)
+  ),
+  aes(
+    x = Training_MAPE,
+    y = Validation_MAPE,
+  color = Series_Identifier
+  ),
+) + geom_point(
+  alpha = .8
+) +
+  geom_rug() +
+  labs(
+    title = "Training and Validation MAPE pairs, colored by series",
+    x = "Training MAPE",
+    y = "Validation MAPE"
+  ) + 
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  ggthemes::theme_tufte(
+    base_size = 16,
+    base_family = "Atkinson Hyperlegible",
+    ticks = F
+  ) +
+  theme(
+    legend.position = "none"
+  )
+```
+
 
 ## Ensemble Methods
 
