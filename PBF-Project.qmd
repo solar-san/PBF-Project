@@ -171,7 +171,7 @@ Plotting all 518 series does not allow to spot details, such as the presence of 
 
 A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values _in between_ available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
 
-```{r}
+```{r binned NAs table}
 #| tbl-cap: "Missing observation grouped by time windows."
 tmelt %>% 
   mutate(
@@ -470,7 +470,7 @@ naive_2004_2007 <- merge(
 It follows from the definition of _naïve forecasts_ (@eq-naive) that what is needed to compute the MAPE for all the training dataset is just a modified version of it in which all rows change their position by 1.
 The last forecast can be added by binding it to maintain the same dimensions and have a full forecast matrix.
 
-```{r}
+```{r training NAIVE forecasts}
 train_forecasts <- train %>% 
   select(-Year) %>% 
   as_tibble()
@@ -489,12 +489,12 @@ naive_train <- rbind(
 )
 ```
 
-```{r}
+```{r phat training naive}
 uhat_full <- naive_train - train
 p_uhat_full <- uhat_full/train
 ```
 
-```{r}
+```{r NAIVE training MAPE}
 mape_full <-  100*apply(
     X = p_uhat_full %>% select(-Year),
     FUN = mean,
@@ -503,11 +503,11 @@ mape_full <-  100*apply(
   )
 ```
 
-```{r}
+```{r dim check training MAPE array}
 mape_full %>% length
 ```
 
-```{r}
+```{r prettyprint training MAPE}
 #| tbl-cap: "Naïve forecasts training MAPE for the first 10 time series from 1998 to 2003."
 mape_full[1:10] %>% 
   round(., digits = 2) %>% 
@@ -532,13 +532,13 @@ mape_validation <-  100*apply(
   )
 ```
 
-```{r}
+```{r dim check validation MAPE array}
 mape_validation %>% length
 ```
 
 This is the MAPE for the first 10 series.
 
-```{r}
+```{r prettyprint validation MAPE}
 #| tbl-cap: "Naïve forecasts validation MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
 mape_validation[1:10] %>% 
   round(., digits = 2) %>% 
