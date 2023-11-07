@@ -211,9 +211,9 @@ tmelt %>%
   geom_line(
     aes(
       y = mean_value,
-    color = viridisLite::mako(1, begin = 1),
+    color = viridisLite::cividis(1, begin = 1),
     ),
-    size = 1,
+    linewidth = 1,
     linetype = "dotted"
   ) + 
   geom_line(
@@ -221,21 +221,21 @@ tmelt %>%
       y = median_value,
     color = viridisLite::cividis(1, begin = .5)
     ),
-    size = 1
+    linewidth = 1
   ) + 
   geom_line(
     aes(
       y = q_0.25,
     color = viridisLite::cividis(1, begin = .25)
     ),
-    size = 1
+    linewidth = 1
   ) + 
   geom_line(
     aes(
       y = q_0.75,
     color = viridisLite::cividis(1, begin = .75)
     ),
-    size = 1
+    linewidth = 1
   ) + 
   geom_ribbon(
     aes(
@@ -418,8 +418,9 @@ The logic behind partitioning the series into a _training_ and _validation_ set 
 We know that _naïve_ forecasts consist in the last observation, $\forall h$. 
 
 $$
+\tag{1}
 y_{T + h \ | \ T} = y_T
-$$
+$$ {#eq-naive}
 
 It follows that we can produce the forecasts with the following code:
 
@@ -439,7 +440,7 @@ naive_forecast %>% dim
 To obtain $F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$:
 
 ```{r all naive forecasts tsibble}
-naive_full <- merge(
+naive_2004_2007 <- merge(
     x = 2003 + 1:4,
     y = naive_forecast
   ) %>% 
@@ -464,13 +465,57 @@ naive_full <- merge(
 
 ### Training Period:
 
+It follows from the definition of _naïve forecasts_ (@eq-naive) that what is needed to compute the MAPE for all the training dataset is just a modified version of it in which all rows change their position by 1.
+The last forecast can be added by binding it to maintain the same dimensions and have a full forecast matrix.
+
+```{r}
+train_forecasts <- train %>% 
+  select(-Year) %>% 
+  as_tibble()
+first_forecast <- rep(
+  NA,
+  518
+)
+naive_train <- rbind(
+  c(
+    rep(
+      NA,
+      dim(train_forecasts)[2]
+      )
+  ),
+  train_forecasts[1:(dim(train_forecasts)[1] -1), ]
+)
+```
+
+```{r}
+uhat_full <- naive_train - train
+p_uhat_full <- uhat_full/train
+```
+
+```{r}
+mape_full <-  100*apply(
+    X = p_uhat_full,
+    FUN = mean,
+    MARGIN = c(1, 2)
+  )
+```
+
+```{r}
+mape_full %>% dim
+```
+
+```{r}
+#| tbl-cap: "Naïve forecasts training MAPE for the first 10 time series from 1998 to 2003."
+mape_full[, 1:10] %>% 
+  round(., digits = 2) %>% 
+  as_tibble() %>% 
+  tail()
+```
+
 ### Validation Period:
 
 ```{r computing validation residuals}
-uhat_validation <- naive_full - validation
-```
-
-```{r computing percentage residuals}
+uhat_validation <- naive_2004_2007 - validation
 p_uhat <- uhat_validation/validation
 ```
 
@@ -489,10 +534,10 @@ mape_validation %>% dim
 This is the MAPE for the first 10 series.
 
 ```{r}
-#| tbl-cap: "Naïve forecasts MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
+#| tbl-cap: "Naïve forecasts validation MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
 mape_validation[, 1:10] %>% 
-  round(., digits = 3) %>% 
-  as.data.frame()
+  round(., digits = 2) %>% 
+  as_tibble()
 ```
 
 ## Computing MASE
