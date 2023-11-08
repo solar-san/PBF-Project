@@ -495,7 +495,7 @@ p_uhat_full <- uhat_full/train
 ```
 
 ```{r NAIVE training MAPE}
-mape_full <-  100*apply(
+mape_training <-  100*apply(
     X = p_uhat_full %>% select(-Year),
     FUN = mean,
     MARGIN = 2,
@@ -504,7 +504,7 @@ mape_full <-  100*apply(
 ```
 
 ```{r dim check training MAPE array}
-mape_full %>% length
+mape_training %>% length
 ```
 
 ### Validation Period:
@@ -532,7 +532,7 @@ mape_validation %>% length
 ```{r prettyprint MAPEs comparison table}
 #| tbl-cap: "Naïve forecasts training and MAPEs for the first 10 time series."
 bind_rows(
-mape_full[1:10] %>% 
+mape_training[1:10] %>% 
   round(., digits = 2) %>% 
   t() %>% 
   as_tibble() %>% 
@@ -582,7 +582,6 @@ mase_training %>% length
 
 This is the MASE for the first 10 series.
 
-
 ### Validation Period:
 
 ```{r qhat validation set}
@@ -614,7 +613,7 @@ tibble(
 )
 ```
 
-## MAPE Pairs
+## MAPE & MASE Pairs
 
 > *Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?*
 
@@ -624,9 +623,9 @@ tibble(
 #| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 ggplot(
   data = tibble(
-    Training_MAPE = mape_full,
+    Training_MAPE = mape_training,
     Validation_MAPE = mape_validation,
-    Series_Identifier = names(mape_full)
+    Series_Identifier = names(mape_training)
   ),
   aes(
     x = Training_MAPE,
@@ -652,6 +651,90 @@ ggplot(
   ) +
   theme(
     legend.position = "none"
+  )
+```
+
+```{r MASE scatterplot}
+#| fig-width: 10
+#| fig-height: 7
+#| fig-cap: "Scatterplot of training and validation MASE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
+#| label: fig-mase
+ggplot(
+  data = tibble(
+    Training_MASE = mase_training,
+    Validation_MASE = mase_validation,
+    Series_Identifier = names(mase_training)
+  ),
+  aes(
+    x = Training_MASE,
+    y = Validation_MASE,
+  color = Series_Identifier
+  ),
+) + geom_point(
+  alpha = .8
+) +
+  geom_rug() +
+  labs(
+    title = "Training and Validation MASE pairs, colored by series",
+    x = "Training MASE",
+    y = "Validation MASE"
+  ) + 
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  ggthemes::theme_tufte(
+    base_size = 16,
+    base_family = "Atkinson Hyperlegible",
+    ticks = F
+  ) +
+  theme(
+    legend.position = "none"
+  )
+```
+Most of the pairs cluster around (0,0), with some notable outliers.
+
+We can filter out these outliers in the MASE training/validation pair to "zoom in" the area in which most of them are clustering:
+
+```{r}
+#| fig-width: 12
+#| fig-height: 10
+#| fig-cap: "Scatterplot of all MASE pairs, as in @fig-mase, with outlier exceeding 3/2 times the IQR filtered out."
+ggplot(
+  data = tibble(
+    Training_MASE = mase_training,
+    Validation_MASE = mase_validation,
+    Series_Identifier = names(mase_training)
+  ) %>% filter(
+    Training_MASE <= 3/2*quantile(Training_MASE, probs = .75) &
+    Training_MASE >= 3/2*quantile(Training_MASE, probs = .25) &
+    Validation_MASE <= 3/2*quantile(Training_MASE, probs = .75) &
+    Validation_MASE >= 3/2*quantile(Training_MASE, probs = .25) 
+  ),
+  aes(
+    x = Training_MASE,
+    y = Validation_MASE,
+  color = Series_Identifier
+  ),
+) + geom_point(
+  alpha = .8
+) +
+  geom_rug() +
+  labs(
+    title = "Training and Validation MASE pairs, colored by series",
+    x = "Training MASE",
+    y = "Validation MASE"
+  ) + 
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  ggthemes::theme_tufte(
+    base_size = 16,
+    base_family = "Atkinson Hyperlegible",
+    ticks = F
+  ) +
+  theme(
+    legend.position = "none",
+    plot.margin = margin(0, 1, 0, 0, "cm")
   )
 ```
 
