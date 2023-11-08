@@ -47,7 +47,8 @@ reference-location: margin
 citation-location: margin 
 ---
 
----
+------------------------------------------------------------------------
+
 \newpage
 
 # Setup and Data Loading
@@ -100,7 +101,6 @@ data_main %>% is.na() %>% sum
 
 We are missing `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of the observations.
 
-
 ## Creating `tsibble`
 
 ```{r creating tourism tsibble}
@@ -117,7 +117,7 @@ tourism_full <- data_main %>%
 
 ## Full Plot
 
-> _Plot all the series (an advanced data visualization tool is recommended) - what type of components are visible? Are the series similar or different? Check for problems such as missing values and possible errors._
+> *Plot all the series (an advanced data visualization tool is recommended) - what type of components are visible? Are the series similar or different? Check for problems such as missing values and possible errors.*
 
 ```{r melted tsibble}
 tmelt <- reshape2::melt(tourism_full,id="Year")
@@ -127,7 +127,7 @@ tmelt <- reshape2::melt(tourism_full,id="Year")
 tmelt %>% dim()
 ```
 
-`tmelt` (@tbl-tmelt) contains the _melted_ data frame, which allows us to visualize all 518 time series at once. 
+`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to visualize all 518 time series at once.
 
 ```{r tmelt head}
 #| label: tbl-tmelt
@@ -169,7 +169,7 @@ tmelt %>%
 
 Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
-A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values _in between_ available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
+A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values *in between* available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
 
 ```{r binned NAs table}
 #| tbl-cap: "Missing observation grouped by time windows."
@@ -187,6 +187,7 @@ tmelt %>%
       )
   )
 ```
+
 ```{r quartiles and mean plot}
 #| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
 #| fig-width: 12
@@ -402,7 +403,7 @@ p1 / p2 / p3 / p4
 
 ## Creating Validation Set
 
-> _Partition the series into training and validation, so that the last 4 years are in the validation period for each series. What is the logic of such a partitioning? What is the disadvantage?_
+> *Partition the series into training and validation, so that the last 4 years are in the validation period for each series. What is the logic of such a partitioning? What is the disadvantage?*
 
 ```{r creating train and test split}
 train <- tourism_full %>% 
@@ -411,13 +412,13 @@ validation <- tourism_full %>%
   filter(Year >= 2004)
 ```
 
-The logic behind partitioning the series into a _training_ and _validation_ set is to _estimate the forecasting error_: we can train a model or apply a filter to the train set and use it to assess its performance with out-of-sample data. The main disadvantage with this approach is that we are not using all the information available to train our model; moreover, we are not computing _true forecasts_, therefore the accuracy measures from the residuals will be smaller.
+The logic behind partitioning the series into a *training* and *validation* set is to *estimate the forecasting error*: we can train a model or apply a filter to the train set and use it to assess its performance with out-of-sample data. The main disadvantage with this approach is that we are not using all the information available to train our model; moreover, we are not computing *true forecasts*, therefore the accuracy measures from the residuals will be smaller.
 
 ## Naïve Forecasts
 
-> _Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead ($F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$)._
+> *Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead (*$F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$).
 
-We know that _naïve_ forecasts consist in the last observation, $\forall h$. 
+We know that *naïve* forecasts consist in the last observation, $\forall h$.
 
 $$
 \tag{1}
@@ -459,16 +460,15 @@ naive_2004_2007 <- merge(
 
 ## Choosing Measures
 
-> _Which measures are suitable if we plan to combine the results for the 518 series? Consider MAE, Average error, MAPE and RMSE._
+> *Which measures are suitable if we plan to combine the results for the 518 series? Consider MAE, Average error, MAPE and RMSE.*
 
 ## Computing MAPE
 
-> _For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period._
+> *For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period.*
 
 ### Training Period:
 
-It follows from the definition of _naïve forecasts_ (@eq-naive) that what is needed to compute the MAPE for all the training dataset is just a modified version of it in which all rows change their position by 1.
-The last forecast can be added by binding it to maintain the same dimensions and have a full forecast matrix.
+It follows from the definition of *naïve forecasts* (@eq-naive) that what is needed to compute the MAPE for all the training dataset is just a modified version of it in which all rows change their position by 1. The last forecast can be added by binding it to maintain the same dimensions and have a full forecast matrix.
 
 ```{r training NAIVE forecasts}
 train_forecasts <- train %>% 
@@ -507,15 +507,6 @@ mape_full <-  100*apply(
 mape_full %>% length
 ```
 
-```{r prettyprint training MAPE}
-#| tbl-cap: "Naïve forecasts training MAPE for the first 10 time series from 1998 to 2003."
-mape_full[1:10] %>% 
-  round(., digits = 2) %>% 
-  t() %>% 
-  as_tibble() %>% 
-  tail()
-```
-
 ### Validation Period:
 
 ```{r computing validation residuals}
@@ -523,7 +514,7 @@ uhat_validation <- naive_2004_2007 - validation
 p_uhat <- uhat_validation/validation
 ```
 
-```{r mape_validation}
+```{r MAPE validation}
 mape_validation <-  100*apply(
     X = p_uhat %>% select(-Year),
     FUN = mean,
@@ -536,23 +527,96 @@ mape_validation <-  100*apply(
 mape_validation %>% length
 ```
 
-This is the MAPE for the first 10 series.
+### Comparison Table
 
-```{r prettyprint validation MAPE}
-#| tbl-cap: "Naïve forecasts validation MAPE for the first 10 time series for the years 2004, 2005, 2006, 2007."
+```{r prettyprint MAPEs comparison table}
+#| tbl-cap: "Naïve forecasts training and MAPEs for the first 10 time series."
+bind_rows(
+mape_full[1:10] %>% 
+  round(., digits = 2) %>% 
+  t() %>% 
+  as_tibble() %>% 
+  mutate(
+    Set = "Training",
+    .before = Y1
+  ) %>% 
+  tail(),
 mape_validation[1:10] %>% 
   round(., digits = 2) %>% 
   t() %>% 
-  as_tibble()
+  as_tibble() %>% 
+  mutate(
+    Set = "Validation"
+  )
+)
 ```
+
+
+```{r}
+
+```
+
 
 ## Computing MASE
 
-> _The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts._
+> *The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts.*
+
+### Training Period:
+
+```{r qhat training set}
+qhat_training <- (dim(uhat_full)[1] - 1) * uhat_full / sum(abs(uhat_full), na.rm = T)
+```
+
+```{r MASE training}
+mase_training <- apply(
+    X = qhat_training %>% select(-Year),
+    FUN = mean,
+    MARGIN = 2,
+    na.rm = T
+  )
+```
+
+```{r dim check training MASE array}
+mase_training %>% length
+```
+
+This is the MASE for the first 10 series.
+
+
+### Validation Period:
+
+```{r qhat validation set}
+qhat_validation <- (dim(uhat_validation)[1] - 1) * uhat_validation / sum(abs(uhat_validation), na.rm = T)
+```
+
+```{r MASE validation}
+mase_validation <- apply(
+    X = qhat_validation %>% select(-Year),
+    FUN = mean,
+    MARGIN = 2,
+    na.rm = T
+  )
+```
+
+```{r dim check validation MASE array}
+mase_validation %>% length
+```
+
+### Comparison Table:
+
+```{r prettyprint MASEs comparison table}
+#| tbl-cap: "Naïve forecasts training and MAPEs for the first 10 time series."
+
+tibble(
+  "Time Series Identifier" = mase_training[1:10] %>% names(),
+  "Training MASE" = mase_training[1:10],
+  "Validation MASE" = mase_validation[1:10]
+)
+```
 
 ## MAPE Pairs
 
-> _Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?_
+> *Create a scatter plot of the MAPE pairs, with the training MAPE on the x-axis and the validation MAPE on the y-axis. Create a similar scatter plot for the MASE pairs. Now examine both plots. What do we learn? How does performance differ between the training and validation periods? How does performance range across series?*
 
 ```{r MAPE scatterplot}
 #| fig-width: 12
@@ -591,23 +655,25 @@ ggplot(
   )
 ```
 
-
 ## Ensemble Methods
 
-> _The competition winner, Lee Baker, used an ensemble of three methods:_
+> *The competition winner, Lee Baker, used an ensemble of three methods:*
 >
->  - _Naive forecasts multiplied by a constant trend_^[Global/local trend: ”globally tourism has grown ”at a rate of 6% annually.”].
->  - Linear regression.
->  - Exponentially-weighted linear regression.
+> -   *Naive forecasts multiplied by a constant trend*[^1].
+> -   Linear regression.
+> -   Exponentially-weighted linear regression.
 
-### a. _Write the exact formula used for generating the first method, in the form $F_{t+k} = ... (k = 1, 2, 3, 4)$,_
+[^1]: Global/local trend: "globally tourism has grown"at a rate of 6% annually."
 
+### a. *Write the exact formula used for generating the first method, in the form* $F_{t+k} = ... (k = 1, 2, 3, 4)$, {.unnumbered}
 
-### b. _What is the rational behind multiplying the naive forecasts by a constant?_^[Hint: think empirical and domain knowledge.]
+### b. *What is the rational behind multiplying the naive forecasts by a constant?*[^2] {.unnumbered}
 
-### c. _What should be the dependent variable and the predictors in a linear regression model for this data? Explain._.
+[^2]: Hint: think empirical and domain knowledge.
 
-### d. _Fit the linear regression model to the first five series and compute forecast errors for the validation period._
+### c. *What should be the dependent variable and the predictors in a linear regression model for this data? Explain.*. {.unnumbered}
+
+### d. *Fit the linear regression model to the first five series and compute forecast errors for the validation period.* {.unnumbered}
 
 ```{r select first 5 series}
 train_subset <- train %>% 
@@ -620,14 +686,14 @@ train_subset <- train %>%
   )
 ```
 
-### e. _Before choosing a linear regression, the winner described the following process:_
+### e. *Before choosing a linear regression, the winner described the following process:* {.unnumbered}
 
-”I examined fitting a polynomial line to the data and using the line to predict future values. I tried using first through fifth order polynomials to find that the lowest MASE was obtained using a first order polynomial (simple regression line). This best fit line was used to predict future values. I also kept the $R^2$ value of the fit for use in blending the results of the prediction.”
+"I examined fitting a polynomial line to the data and using the line to predict future values. I tried using first through fifth order polynomials to find that the lowest MASE was obtained using a first order polynomial (simple regression line). This best fit line was used to predict future values. I also kept the $R^2$ value of the fit for use in blending the results of the prediction."
 
-> _What are two flaws in this approach?_
+> *What are two flaws in this approach?*
 
-### f. _If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?_
+### f. *If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?* {.unnumbered}
 
-### g. _The winner concludes with possible improvements one being ”an investigation into how to come up with a blending ensemble method that doesn’t use much manual twerking would also be of benefit”. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?_
+### g. *The winner concludes with possible improvements one being "an investigation into how to come up with a blending ensemble method that doesn't use much manual twerking would also be of benefit". Can you suggest methods or an approach that would lead to easier automation of the ensemble step?* {.unnumbered}
 
-### h. _The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?_
+### h. *The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?* {.unnumbered}
