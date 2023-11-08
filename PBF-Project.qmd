@@ -117,6 +117,8 @@ tourism_full <- data_main %>%
 
 ## Full Plot
 
+### Everything, Everywhere, All At Once
+
 > *Plot all the series (an advanced data visualization tool is recommended) - what type of components are visible? Are the series similar or different? Check for problems such as missing values and possible errors.*
 
 ```{r melted tsibble}
@@ -187,6 +189,8 @@ tmelt %>%
       )
   )
 ```
+
+### Grouped by IQR
 
 ```{r quartiles and mean plot}
 #| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
@@ -267,139 +271,9 @@ tmelt %>%
   )
 ```
 
-```{r}
-#| include: false
-#| eval: false
-#| fig-width: 12
-#| fig-height: 30
-p1 <- tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
-    )
-  ) %>% 
-  filter(
-    Time_Interval == "(1964,1975]" |
-    Time_Interval == "(1975,1985]"
-  )  %>% 
-  ggplot(
-    aes(
-      x = Year,
-      y = value,
-      colour = variable,
-      group = variable
-      )
-    ) + 
-  geom_line(
-    alpha = .8
-  ) + 
-  scale_y_log10() +
-  scale_color_viridis_d(
-    option = "cividis"
-  ) +
-  labs(
-    y = "Value"
-  ) +
-  theme(
-    legend.position = "none"
-    )
-p2 <- tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
-    )
-  ) %>% 
-  filter(
-    Time_Interval == "(1985,1995]"
-  )  %>% 
-  ggplot(
-    aes(
-      x = Year,
-      y = value,
-      colour = variable,
-      group = variable
-      )
-    ) + 
-  geom_line(
-    alpha = .8
-  ) + 
-  scale_y_log10() +
-  scale_color_viridis_d(
-    option = "cividis"
-  ) +
-  labs(
-    y = ""
-  ) +
-  theme(
-    legend.position = "none"
-    )
-p3 <- tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
-    )
-  ) %>% 
-  filter(
-    Time_Interval == "(1995,2003]"
-  )  %>% 
-  ggplot(
-    aes(
-      x = Year,
-      y = value,
-      colour = variable,
-      group = variable
-      )
-    ) + 
-  geom_line(
-    alpha = .8
-  ) + 
-  scale_y_log10() +
-  scale_color_viridis_d(
-    option = "cividis"
-  ) +
-  labs(
-    y = "Value"
-  ) +
-  theme(
-    legend.position = "none"
-    )
-p4 <- tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
-    )
-  ) %>% 
-  filter(
-    Time_Interval == "(2003,2008]"
-  )  %>% 
-  ggplot(
-    aes(
-      x = Year,
-      y = value,
-      colour = variable,
-      group = variable
-      )
-    ) + 
-  geom_line(
-    alpha = .8
-  ) + 
-  scale_y_log10() +
-  scale_color_viridis_d(
-    option = "cividis"
-  ) +
-  labs(
-    y = ""
-  ) +
-  theme(
-    legend.position = "none"
-    )
+### Merging Series By Starting Year
 
-p1 / p2 / p3 / p4
-```
+
 
 ## Creating Validation Set
 
