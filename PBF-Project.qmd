@@ -493,12 +493,6 @@ mape_validation[1:10] %>%
 )
 ```
 
-
-```{r}
-
-```
-
-
 ## Computing MASE
 
 > *The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts.*
@@ -637,7 +631,7 @@ Most of the pairs cluster around (0,0), with some notable outliers.
 
 We can filter out these outliers in the MASE training/validation pair to "zoom in" the area in which most of them are clustering:
 
-```{r}
+```{r zoomed-in MASE pairs}
 #| fig-width: 12
 #| fig-height: 10
 #| fig-cap: "Scatterplot of all MASE pairs, as in @fig-mase, with outliers exceeding 3/2 times the IQR filtered out."
