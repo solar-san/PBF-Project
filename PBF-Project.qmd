@@ -117,9 +117,9 @@ tourism_full <- data_main %>%
 
 ## Full Plot
 
-### Everything, Everywhere, All At Once
+In all the subsequent plots, a $log_{10}$ transformation has been employed exclusively for representing the time series on the y-axis. This adjustment becomes necessary since the original data range^[$10^9$, shown in @tbl-range.] does not permit a clear and meaningful visualization of the series when plotted together.
 
-> *Plot all the series (an advanced data visualization tool is recommended) - what type of components are visible? Are the series similar or different? Check for problems such as missing values and possible errors.*
+`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to visualize all 518 time series at once.
 
 ```{r melted tsibble}
 tmelt <- reshape2::melt(tourism_full,id="Year")
@@ -129,21 +129,44 @@ tmelt <- reshape2::melt(tourism_full,id="Year")
 tmelt %>% dim()
 ```
 
-`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to visualize all 518 time series at once.
+```{r}
+#| label: tbl-range
+#| tbl-cap: "Range of Tourism Time Series"
+tmelt %>% 
+  reframe(
+    "Range" =  range(
+      value, 
+      na.rm = T, 
+      finite = T
+      )
+    ) %>% 
+  mutate(
+    "Y" = c(
+      "min", 
+      "max"
+      ),
+    .before = "Range"
+    )
+```
 
 ```{r tmelt head}
 #| label: tbl-tmelt
 #| echo: false
-#| tbl-cap: "Melted `tsibble` containing all time series."
+#| tbl-cap: "Excerpt of melted `tsibble` containing all time series."
 tmelt %>% 
   tail(10)
 ```
+
+### Everything, Everywhere, All At Once
+
+> *Plot all the series (an advanced data visualization tool is recommended) - what type of components are visible? Are the series similar or different? Check for problems such as missing values and possible errors.*
 
 ```{r full viz train}
 #| label: fig-every
 #| fig-cap: "Printing a legend for 518 different series is not possible. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values."
 #| fig-width: 12
 #| fig-height: 12
+#| #| warning: false
 tmelt %>% 
   ggplot(
     aes(
@@ -162,24 +185,24 @@ tmelt %>%
   ) +
   labs(
     title = "Tourism Time Series: Everything All At Once",
-    y = "Value"
+    y = expression(log[10](Value))
   ) +
   theme(
     legend.position = "none"
     )
 ```
 
-Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some probable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
+Plotting all 518 series does not allow to spot details, such as the presence of seasonal patterns. However, a general upward trend is clear; moreover, we can spot some notable outliers, that should be further investigated, and some clues about the presence of cyclicality in some of the series.
 
-A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)` of all observations. While this is mostly to be attributed to the different starting time of the series, we can also see that some time series have missing values occurring between the starting and ending point; hence, some series present missing values *in between* available observations. From the visualization we can definitely group different starting points: this suggests that another approach to visualisation might be successfully conducted by grouping series by their starting date.
+A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. Clearly, this can be attributed to the distinct initial timestamps of the series. It is evident that we can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
 
 ```{r binned NAs table}
-#| tbl-cap: "Missing observation grouped by time windows."
+#| tbl-cap: "Missing observation grouped by time windows: binning the data suggests that the presence of missing observations is related to the scarcity of long-run time series."
 tmelt %>% 
   mutate(
     Time_Interval = cut(
       Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+      breaks = c(1964, 1975, 1985, 1995, 2003, 2007)
     )
   ) %>% 
   group_by(Time_Interval) %>% 
@@ -190,19 +213,23 @@ tmelt %>%
   )
 ```
 
-### Grouped by IQR
+### Plotting only the IQR
+
+Applying a filter to obtain only the _Inter-Quartile Range_ (IQR) in our plots provides a visual representation of the central 50% of the data points that cluster around the median. This visualization enhances our ability to interpret the observed variability as depicted in @fig-every.
+
+It becomes apparent that there are two distinct trend-cycles and an increasing degree of variability within the collected data. This variation could be attributed to the absence of long-running time series. A consistent overall trend persists across all years, unaffected by the declining phase that spans roughly from 1975 to 1985, during which the widest range of values is also observed. Nevertheless, the upward trend remains robust and consistent throughout.
 
 ```{r quartiles and mean plot}
 #| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
 #| fig-width: 12
-#| fig-height: 10
+#| fig-height: 6
 tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
-    )
-  ) %>%  
+  # mutate(
+  #   Time_Interval = cut(
+  #     Year,
+  #     breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+  #   )
+  # ) %>%  
   group_by(Year) %>% 
   mutate(
     median_value = median(value, na.rm = T),
@@ -218,7 +245,7 @@ tmelt %>%
   geom_line(
     aes(
       y = mean_value,
-    color = viridisLite::cividis(1, begin = 1),
+    color = viridisLite::rocket(1, begin = 1),
     ),
     linewidth = 1,
     linetype = "dotted"
@@ -226,21 +253,21 @@ tmelt %>%
   geom_line(
     aes(
       y = median_value,
-    color = viridisLite::cividis(1, begin = .5)
+    color = viridisLite::rocket(1, begin = .5)
     ),
     linewidth = 1
   ) + 
   geom_line(
     aes(
       y = q_0.25,
-    color = viridisLite::cividis(1, begin = .25)
+    color = viridisLite::rocket(1, begin = .25)
     ),
     linewidth = 1
   ) + 
   geom_line(
     aes(
       y = q_0.75,
-    color = viridisLite::cividis(1, begin = .75)
+    color = viridisLite::rocket(1, begin = .75)
     ),
     linewidth = 1
   ) + 
@@ -260,23 +287,25 @@ tmelt %>%
       expression(q[0.75]),
       expression(mu)
       ),
-    option = "cividis",
+    option = "rocket",
     direction = -1,
     end = .9
   ) +
   labs(
     title = "Tourism Time Series: Quartiles and Mean",
-    y = "Value",
+    y = expression(log[10](Value)),
     colour = "Index"
   )
 ```
 
 ### Plotting Series By Starting Year
 
-```{r}
-#| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
+```{r ts plot grouped by length}
+#| label: fig-tsgrouped
+#| fig-cap: "All series have been grouped by starting year and plotted to achieve more clarity. Each subtitle represent the number of periods for each subset. The same color mapping of @fig-every has been used to differentiate the series."
 #| fig-width: 12
-#| fig-height: 20
+#| fig-height: 18
+#| warning: false
 
 tmelt %>% 
   group_by(variable) %>% 
@@ -299,6 +328,10 @@ tmelt %>%
       color = variable
     )
   ) +
+  labs(
+    title = "Tourism Time Series By Starting Year",
+    y = expression(log[10](Value))
+  ) +
   scale_y_log10() +
   scale_color_viridis_d(
     option = "cividis"
@@ -308,7 +341,7 @@ tmelt %>%
   )
 ```
 
-
+### Plotting Seasonal Components
 
 ## Creating Validation Set
 
@@ -377,7 +410,7 @@ naive_2004_2007 <- merge(
 
 ### Training Period:
 
-It follows from the definition of *naïve forecasts* (@eq-naive) that what is needed to compute the MAPE for all the training dataset is just a modified version of it in which all rows change their position by 1. The last forecast can be added by binding it to maintain the same dimensions and have a full forecast matrix.
+Derived from the definition of _naïve forecasts_ outlined in Equation 1, it becomes evident that computing the Mean Absolute Percentage Error (MAPE) for the entire training dataset primarily involves a scaled version of the same data, with each row shifting by a single step. In this modified version, a row containing `NA`s symbolizes the (unavailable) naïve forecasts for $t = 1$.
 
 ```{r training NAIVE forecasts}
 train_forecasts <- train %>% 
@@ -607,7 +640,7 @@ We can filter out these outliers in the MASE training/validation pair to "zoom i
 ```{r}
 #| fig-width: 12
 #| fig-height: 10
-#| fig-cap: "Scatterplot of all MASE pairs, as in @fig-mase, with outlier exceeding 3/2 times the IQR filtered out."
+#| fig-cap: "Scatterplot of all MASE pairs, as in @fig-mase, with outliers exceeding 3/2 times the IQR filtered out."
 ggplot(
   data = tibble(
     Training_MASE = mase_training,
