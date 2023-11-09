@@ -684,7 +684,7 @@ ggplot(
 
 [^1]: Global/local trend: "globally tourism has grown"at a rate of 6% annually."
 
-### a. *Write the exact formula used for generating the first method, in the form* $F_{t+k} = ... (k = 1, 2, 3, 4)$, {.unnumbered}
+### a. *Write the exact formula used for generating the first method, in the form* $F_{t+k} = ...$, where $k = 1, 2, 3, 4)$, {.unnumbered}
 
 ### b. *What is the rational behind multiplying the naive forecasts by a constant?*[^2] {.unnumbered}
 
