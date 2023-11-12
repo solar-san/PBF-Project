@@ -56,3 +56,28 @@ abc <- tmelt %>%
   mutate(series_length = 43-  value %>% is.na %>% sum) %>% 
   arrange(desc(series_length)) %>% 
   mutate(series_length = as_factor(series_length)) 
+
+tmelt %>% 
+  ggplot(
+    aes(
+      x = Year,
+      y = value,
+      colour = variable,
+      group = variable
+    )
+  ) + 
+  geom_line(
+    alpha = .8
+  ) + 
+  scale_y_log10() +
+  coord_polar() +
+  scale_color_viridis_d(
+    option = "cividis"
+  ) +
+  labs(
+    title = "Tourism Time Series: Everything All At Once",
+    y = expression(log[10](Value))
+  ) +
+  theme(
+    legend.position = "none"
+  )
