@@ -92,11 +92,14 @@ data_main <- readr::read_csv(
 ```
 
 ```{r checking dimensions and NA 1}
-data_main %>% dim
+data_main %>% 
+  dim
 ```
 
 ```{r checkig dimensions and NA 2}
-data_main %>% is.na() %>% sum
+data_main %>% 
+  is.na() %>% 
+  sum
 ```
 
 We are missing `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of the observations.
@@ -113,21 +116,44 @@ tourism_full <- data_main %>%
   )
 ```
 
+`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to apply the tidy forecasting workflow all 518 time series at once. Its main variables are:
+
+- `index`: `Year`, as in the original data frame.
+- `key`: `Identifier`, a new categorical variable allowing us to transform the data frame the tidy format; it consists in a set of _labels_ that identify each time series.
+- `value`: the $Y_t$ value for each time series.
+
+
+```{r melted tsibble}
+tmelt <- reshape2::melt(
+  tourism_full, 
+  id = "Year",
+  variable.name = "Identifier",
+  value.name = "Value"
+  ) %>% 
+  as_tsibble(
+    index = "Year",
+    key = "Identifier"
+  )
+```
+
+```{r tmelt dim}
+tmelt %>% 
+  dim()
+```
+
+```{r tmelt head}
+#| label: tbl-tmelt
+#| echo: false
+#| tbl-cap: "Excerpt of melted `tsibble` containing all time series."
+tmelt %>% 
+  tail(10)
+```
+
 # Assignment
 
 ## Full Plot
 
 In all the subsequent plots, a $log_{10}$ transformation has been employed exclusively for representing the time series on the y-axis. This adjustment becomes necessary since the original data range^[$10^9$, shown in @tbl-range.] does not permit a clear and meaningful visualization of the series when plotted together.
-
-`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to visualize all 518 time series at once.
-
-```{r melted tsibble}
-tmelt <- reshape2::melt(tourism_full,id="Year")
-```
-
-```{r tmelt dim}
-tmelt %>% dim()
-```
 
 ```{r}
 #| label: tbl-range
@@ -135,7 +161,7 @@ tmelt %>% dim()
 tmelt %>% 
   reframe(
     "Range" =  range(
-      value, 
+      Value, 
       na.rm = T, 
       finite = T
       )
@@ -147,14 +173,6 @@ tmelt %>%
       ),
     .before = "Range"
     )
-```
-
-```{r tmelt head}
-#| label: tbl-tmelt
-#| echo: false
-#| tbl-cap: "Excerpt of melted `tsibble` containing all time series."
-tmelt %>% 
-  tail(10)
 ```
 
 ### Everything, Everywhere, All At Once
@@ -171,9 +189,9 @@ tmelt %>%
   ggplot(
     aes(
       x = Year,
-      y = value,
-      colour = variable,
-      group = variable
+      y = Value,
+      colour = Identifier,
+      group = Identifier
       )
     ) + 
   geom_line(
@@ -196,105 +214,22 @@ Plotting all 518 series does not allow to spot details, such as the presence of 
 
 A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. Clearly, this can be attributed to the distinct initial timestamps of the series. It is evident that we can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
 
-```{r binned NAs table}
+```{r NAs by year table}
 #| tbl-cap: "Missing observation grouped by time windows: binning the data suggests that the presence of missing observations is related to the scarcity of long-run time series."
-tmelt %>% 
-  mutate(
-    Time_Interval = cut(
-      Year,
-      breaks = c(1964, 1975, 1985, 1995, 2003, 2007)
-    )
-  ) %>% 
-  group_by(Time_Interval) %>% 
-  summarise(
-    Available_Observations = sum(
-      !is.na(value)
-      )
-  )
-```
-
-### Plotting only the IQR
-
-Applying a filter to obtain only the _Inter-Quartile Range_ (IQR) in our plots provides a visual representation of the central 50% of the data points that cluster around the median. This visualization enhances our ability to interpret the observed variability as depicted in @fig-every.
-
-It becomes apparent that there are two distinct trend-cycles and an increasing degree of variability within the collected data. This variation could be attributed to the absence of long-running time series. A consistent overall trend persists across all years, unaffected by the declining phase that spans roughly from 1975 to 1985, during which the widest range of values is also observed. Nevertheless, the upward trend remains robust and consistent throughout.
-
-```{r quartiles and mean plot}
-#| fig-cap: "The following plot represents the position indexes given by the mean and the quartile, computed by considering all the series as observations and discarding missing observations."
-#| fig-width: 12
-#| fig-height: 6
 tmelt %>% 
   # mutate(
   #   Time_Interval = cut(
   #     Year,
-  #     breaks = c(1964, 1975, 1985, 1995, 2003, 2008)
+  #     breaks = c(1964, 1975, 1985, 1995, 2003, 2007)
   #   )
-  # ) %>%  
-  group_by(Year) %>% 
-  mutate(
-    median_value = median(value, na.rm = T),
-    mean_value = mean(value, na.rm = T),
-    q_0.25 = quantile(value, probs = .25, na.rm = T),
-    q_0.75 = quantile(value, probs = .75, na.rm = T)
-  ) %>% 
-  ggplot(
-    aes(
-      x = Year
+  # ) %>% 
+ # as_tibble() %>% 
+  select(-Year) %>% 
+  # group_by(Time_Interval) %>% 
+  summarise(
+    Available_Observations = sum(
+      !is.na(Value)
       )
-    ) + 
-  geom_line(
-    aes(
-      y = mean_value,
-    color = viridisLite::rocket(1, begin = 1),
-    ),
-    linewidth = 1,
-    linetype = "dotted"
-  ) + 
-  geom_line(
-    aes(
-      y = median_value,
-    color = viridisLite::rocket(1, begin = .5)
-    ),
-    linewidth = 1
-  ) + 
-  geom_line(
-    aes(
-      y = q_0.25,
-    color = viridisLite::rocket(1, begin = .25)
-    ),
-    linewidth = 1
-  ) + 
-  geom_line(
-    aes(
-      y = q_0.75,
-    color = viridisLite::rocket(1, begin = .75)
-    ),
-    linewidth = 1
-  ) + 
-  geom_ribbon(
-    aes(
-      ymin = q_0.25,
-      ymax = q_0.75,
-    ),
-    fill = "grey95",
-    alpha = .5
-  ) +
-  scale_y_log10()  +
-  scale_color_viridis_d(
-    labels = c(
-      expression(q[0.25]),
-      expression(q[0.50]),
-      expression(q[0.75]),
-      expression(mu)
-      ),
-    option = "rocket",
-    direction = -1,
-    end = .9
-  ) +
-  labs(
-    title = "Tourism Time Series: Quartiles and Mean",
-    y = expression(log[10](Value)),
-    colour = "Index"
   )
 ```
 
@@ -308,8 +243,8 @@ tmelt %>%
 #| warning: false
 
 tmelt %>% 
-  group_by(variable) %>% 
-  mutate(series_length = 43-  value %>% is.na %>% sum) %>% 
+  group_by(Identifier) %>% 
+  mutate(series_length = 43 -  Value %>% is.na %>% sum) %>% 
   ungroup() %>% 
   arrange(desc(series_length)) %>% 
   mutate(series_length = as_factor(series_length)) %>% 
@@ -324,8 +259,8 @@ tmelt %>%
   ) +
   geom_line(
     aes(
-      y = value,
-      color = variable
+      y = Value,
+      color = Identifier
     )
   ) +
   labs(
@@ -341,17 +276,24 @@ tmelt %>%
   )
 ```
 
-### Plotting Seasonal Components
-
 ## Creating Validation Set
 
 > *Partition the series into training and validation, so that the last 4 years are in the validation period for each series. What is the logic of such a partitioning? What is the disadvantage?*
 
 ```{r creating train and test split}
-train <- tourism_full %>% 
-  filter(Year < 2004)
-validation <- tourism_full %>% 
-  filter(Year >= 2004)
+train <- tmelt %>% 
+  filter(
+    Year < 2004
+    )
+validation <- tmelt %>% 
+  filter(
+    Year >= 2004
+    )
+```
+
+```{r}
+validation %>% 
+  head()
 ```
 
 The logic behind partitioning the series into a *training* and *validation* set is to *estimate the forecasting error*: we can train a model or apply a filter to the train set and use it to assess its performance with out-of-sample data. The main disadvantage with this approach is that we are not using all the information available to train our model; moreover, we are not computing *true forecasts*, therefore the accuracy measures from the residuals will be smaller.
@@ -360,44 +302,38 @@ The logic behind partitioning the series into a *training* and *validation* set 
 
 > *Generate naïve forecasts for all series for the validation period. For each series, create forecasts with horizons of 1, 2, 3, and 4 years ahead (*$F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$).
 
-We know that *naïve* forecasts consist in the last observation, $\forall h$.
-
 $$
 \tag{1}
 y_{T + h \ | \ T} = y_T
 $$ {#eq-naive}
 
-It follows that we can produce the forecasts with the following code:
+We can produce the forecasts with the following code:
 
-```{r naive forecast at 1}
-naive_forecast <- train %>% 
-  filter(
-    Year == 2003
-  ) %>% as_tibble()
+```{r validation NAIVE forecasts}
+naive_model <- train %>% 
+  model(NAIVE(Value))
 ```
 
-`naive_forecast` will contain a `tsibble` with $y_t$ for all the series.
+`naive_forecast` will contain a `mable` for all the series.
 
-```{r checking dimensions}
-naive_forecast %>% dim
+```{r}
+naive_model %>% 
+  head(3)
 ```
 
 To obtain $F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$:
 
-```{r all naive forecasts tsibble}
-naive_2004_2007 <- merge(
-    x = 2003 + 1:4,
-    y = naive_forecast
-  ) %>% 
-  mutate(
-    Year = x
-  ) %>% 
-  select(
-    -x
-  ) %>% 
-  as_tsibble(
-    index = Year
+```{r NAIVE validation forecasts fable}
+naive_validation <- 
+  naive_model %>% 
+  forecast(
+    h = 4
   )
+```
+
+```{r NAIVE validation forecasts fable tail}
+naive_validation %>% 
+  tail(20)
 ```
 
 ## Choosing Measures
@@ -413,22 +349,8 @@ naive_2004_2007 <- merge(
 Derived from the definition of _naïve forecasts_ outlined in Equation 1, it becomes evident that computing the Mean Absolute Percentage Error (MAPE) for the entire training dataset primarily involves a scaled version of the same data, with each row shifting by a single step. In this modified version, a row containing `NA`s symbolizes the (unavailable) naïve forecasts for $t = 1$.
 
 ```{r training NAIVE forecasts}
-train_forecasts <- train %>% 
-  select(-Year) %>% 
-  as_tibble()
-first_forecast <- rep(
-  NA,
-  518
-)
-naive_train <- rbind(
-  c(
-    rep(
-      NA,
-      dim(train_forecasts)[2]
-      )
-  ),
-  train_forecasts[1:(dim(train_forecasts)[1] -1), ]
-)
+train_model <- train %>% 
+  accuracy()
 ```
 
 ```{r phat training naive}
