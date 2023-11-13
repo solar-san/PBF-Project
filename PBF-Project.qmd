@@ -311,6 +311,7 @@ We can produce the forecasts with the following code:
 
 ```{r validation NAIVE forecasts}
 naive_model <- train %>% 
+  na.omit() %>% 
   model(NAIVE(Value))
 ```
 
@@ -324,7 +325,7 @@ naive_model %>%
 To obtain $F_{t+1}, F_{t+2}, F_{t+3}$, and $F_{t+4}$:
 
 ```{r NAIVE validation forecasts fable}
-naive_validation <- 
+naive_fc <- 
   naive_model %>% 
   forecast(
     h = 4
@@ -332,7 +333,7 @@ naive_validation <-
 ```
 
 ```{r NAIVE validation forecasts fable tail}
-naive_validation %>% 
+naive_fc %>% 
   tail(20)
 ```
 
@@ -348,71 +349,73 @@ naive_validation %>%
 
 Derived from the definition of _naïve forecasts_ outlined in Equation 1, it becomes evident that computing the Mean Absolute Percentage Error (MAPE) for the entire training dataset primarily involves a scaled version of the same data, with each row shifting by a single step. In this modified version, a row containing `NA`s symbolizes the (unavailable) naïve forecasts for $t = 1$.
 
-```{r training NAIVE forecasts}
-train_model <- train %>% 
+```{r errors training}
+errors_training <- naive_model %>% 
   accuracy()
 ```
 
-```{r phat training naive}
-uhat_full <- naive_train - train
-p_uhat_full <- uhat_full/train
-```
+This is the training MAPE for the first 10 series:
 
-```{r NAIVE training MAPE}
-mape_training <-  100*apply(
-    X = p_uhat_full %>% select(-Year),
-    FUN = mean,
-    MARGIN = 2,
-    na.rm = T
-  )
-```
-
-```{r dim check training MAPE array}
-mape_training %>% length
+```{r mape training}
+errors_training %>% 
+  select(
+    Identifier,
+    .model,
+    MAPE
+  ) %>% 
+  head(10)
 ```
 
 ### Validation Period:
 
-```{r computing validation residuals}
-uhat_validation <- naive_2004_2007 - validation
-p_uhat <- uhat_validation/validation
-```
-
-```{r MAPE validation}
-mape_validation <-  100*apply(
-    X = p_uhat %>% select(-Year),
-    FUN = mean,
-    MARGIN = 2,
-    na.rm = T
+```{r errors validation}
+errors_validation <- 
+  accuracy(
+    naive_fc,
+    validation
   )
 ```
 
-```{r dim check validation MAPE array}
-mape_validation %>% length
+This is the validation MAPE for the first 10 series:
+
+```{r tbl validation MAPE}
+errors_validation %>% 
+   select(
+    Identifier,
+    .model,
+    MAPE
+  ) %>% 
+  head(10)
 ```
 
 ### Comparison Table
 
 ```{r prettyprint MAPEs comparison table}
-#| tbl-cap: "Naïve forecasts training and MAPEs for the first 10 time series."
-bind_rows(
-mape_training[1:10] %>% 
+#| tbl-cap: "Naïve forecasts training and validation MAPEs for the first 10 time series."
+MAPE_comparison <- bind_rows(
+errors_training[1:10, ] %>% 
+  select(MAPE) %>% 
   round(., digits = 2) %>% 
   t() %>% 
   as_tibble() %>% 
   mutate(
     Set = "Training",
-    .before = Y1
+    .before = V1
   ) %>% 
   tail(),
-mape_validation[1:10] %>% 
+errors_validation[1:10, ] %>% 
+  select(MAPE) %>% 
   round(., digits = 2) %>% 
   t() %>% 
   as_tibble() %>% 
   mutate(
     Set = "Validation"
   )
-)
+) 
+
+colnames(MAPE_comparison) <- c("Set", errors_training$Identifier %>% as.character() %>% unique %>% head(10))
+
+MAPE_comparison
 ```
 
 ## Computing MASE
@@ -421,54 +424,70 @@ mape_validation[1:10] %>%
 
 ### Training Period:
 
-```{r qhat training set}
-qhat_training <- (dim(uhat_full)[1] - 1) * uhat_full / sum(abs(uhat_full), na.rm = T)
+```{r tbl training MASE}
+#| tbl-cap: "Training MASE for the first 10 series."
+errors_training %>% 
+  select(
+    Identifier,
+    .model,
+    MASE
+  ) %>% 
+  head(10)
 ```
 
-```{r MASE training}
-mase_training <- apply(
-    X = qhat_training %>% select(-Year),
-    FUN = mean,
-    MARGIN = 2,
-    na.rm = T
-  )
-```
-
-```{r dim check training MASE array}
-mase_training %>% length
-```
-
-This is the MASE for the first 10 series.
+MASE gives an indication of effectiveness of forecasting algorithm with respect to a naïve forecast. Its value greater than one 1 indicates the algorithm is performing poorly compared to the naïve forecast: hence, since we have been computing the naïve MASE of in-sample data, it is equal to 1 for all time series in our training dataset.
 
 ### Validation Period:
 
-```{r qhat validation set}
-qhat_validation <- (dim(uhat_validation)[1] - 1) * uhat_validation / sum(abs(uhat_validation), na.rm = T)
-```
-
-```{r MASE validation}
-mase_validation <- apply(
-    X = qhat_validation %>% select(-Year),
-    FUN = mean,
-    MARGIN = 2,
-    na.rm = T
+```{r validation errors}
+errors_validation <- 
+  accuracy(
+    naive_fc,
+    tmelt
   )
 ```
 
-```{r dim check validation MASE array}
-mase_validation %>% length
+This is the validation MASE for the first 10 series: 
+
+```{r tbl validation MASE}
+#| tbl-cap: "Validation MASE for the first 10 series."
+errors_validation %>% 
+   select(
+    Identifier,
+    .model,
+    MASE
+  ) %>% 
+  head(10)
 ```
 
 ### Comparison Table:
 
 ```{r prettyprint MASEs comparison table}
-#| tbl-cap: "Naïve forecasts training and MAPEs for the first 10 time series."
+#| tbl-cap: "Naïve forecasts training and validation MASEs for the first 10 time series."
+MASE_comparison <- bind_rows(
+errors_training[1:10, ] %>% 
+  select(MASE) %>% 
+  round(., digits = 2) %>% 
+  t() %>% 
+  as_tibble() %>% 
+  mutate(
+    Set = "Training",
+    .before = V1
+  ) %>% 
+  tail(),
+errors_validation[1:10, ] %>% 
+  select(MASE) %>% 
+  round(., digits = 2) %>% 
+  t() %>% 
+  as_tibble() %>% 
+  mutate(
+    Set = "Validation"
+  )
+) 
 
-tibble(
-  "Time Series Identifier" = mase_training[1:10] %>% names(),
-  "Training MASE" = mase_training[1:10],
-  "Validation MASE" = mase_validation[1:10]
-)
+colnames(MASE_comparison) <- c("Set", errors_training$Identifier %>% as.character() %>% unique %>% head(10))
+
+MASE_comparison
 ```
 
 ## MAPE & MASE Pairs
@@ -480,15 +499,15 @@ tibble(
 #| fig-height: 10
 #| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 ggplot(
-  data = tibble(
-    Training_MAPE = mape_training,
-    Validation_MAPE = mape_validation,
-    Series_Identifier = names(mape_training)
+  data = data_frame(
+    Series_Identifier = errors_training %>% select(Identifier),
+    Training_MAPE = errors_training %>% select(MAPE),
+    Validation_MAPE = errors_validation %>% select(MAPE),
   ),
   aes(
     x = Training_MAPE,
     y = Validation_MAPE,
-  color = Series_Identifier
+    color = Series_Identifier
   ),
 ) + geom_point(
   alpha = .8
