@@ -173,3 +173,15 @@ tmelt %>%
     y = expression(log[10](Value)),
     colour = "Index"
   )
+
+tmelt %>% 
+  filter(
+    Identifier == "Y1" |
+      Identifier == "Y2" |
+      Identifier == "Y3" |
+      Identifier == "Y4" |
+      Identifier == "Y5"
+  ) %>% 
+  filter(Year > 2003) %>% 
+  is.na() %>% 
+  sum
