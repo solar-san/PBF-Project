@@ -322,7 +322,6 @@ The logic behind partitioning the series into a *training* and *validation* set 
 We can produce the forecasts by applying @eq-naive:
 
 $$
-\tag{1}
 y_{T + h \ | \ T} = y_T
 $$ {#eq-naive}
 
@@ -663,9 +662,8 @@ ggplot(
 Starting from @eq-naive and introducing a constant trend multiplier, denoted as $k$^[In the case of an annual growth rate of 6%, $k = 0.06$.], we can express the equation for naïve forecasts multiplied by this constant trend as follows:
 
 $$
-\tag{2}
 y_{T + h \ | \ T} = y_T \times (1 + k)^h
-$$
+$${#eq-trendednaive}
 
 $h$, as usual, is the number of years in the future we want to forecast. This formulation represents the extension of naïve forecasts, incorporating a constant trend multiplier, thereby accounting for a consistent trend in the time series data.
 
@@ -755,15 +753,27 @@ We could implement two different exponential smoothings that include a Trend com
 
 Automation of model selection and amalgamation could be achieved through the adoption of a "loss function"-centered approach, constructed upon the ensemble amalgamation of diverse methods. The allocation of weights to each method's forecast could be fine-tuned by assessing their performance within the parameter space on the validation set, employing a weighted least squares method. 
 
-To find these hyper-parameter estimates numerically, then, we could use a straightforward neural network, capable of receiving a matrix containing forecasts from various ensemble methods as input, which would enable the learning of optimal weights through backpropagation, facilitated by a properly calibrated activation function.
+To find these hyper-parameter estimates numerically, then, we could use different approaches, ranging from a linear combination of weights to a more complex deep neural network, capable of receiving a matrix containing forecasts from various ensemble methods as input, which would enable the learning of optimal weights through backpropagation, facilitated by a properly calibrated activation function. In both cases, learning the model would be equivalent to setting the proper mix of forecasts.
+
+In other words, a machine learning based approach might prove helpful in choosing the best combination of forecast, with the aim of minimising the MASE of the validation set; nevertheless, caution should be used as it would introduce another potential source of overfitting.
+
+However:
+
+> "_While there has been considerable research on using weighted averages, or some other more complicated combination approach, using a simple average has proven hard to beat._"^[Hyndman, R. J., & Athanasopoulos, G. (2018). Forecasting: principles and practice. OTexts.].
+
+This simple average could work as a benchmark to evaluate the amalgamation method used to build the ensemble forecast.
 
 ### h. *The competition focused on minimizing the average MAPE of the next four values across all 518 series. How does this goal differ from goals encountered in practice when considering tourism demand? Which steps in the forecasting process would likely be different in a real-life tourism forecasting scenario?* {.unnumbered}
 
 The main difference in a real-world scenario is the complete absence of _prediction intervals_ and any interest in quantifying _uncertainty_.  
 
-As cleverly stated by the contest winner: "_If the test set includes data from 2008–2009, I’m speculating that depressed tourism numbers as a result of the global economic recession could have caused a significant difference in the trends._" This stresses the importance of understanding the underlying assumptions and the power of using _models_ instead of _filters_, or in combinations with them.
+As cleverly stated by the contest winner: 
 
-Gaming a specific statistic is not a viable tool for general or specific purpose forecasting in a real-world scenario: on the one hand because we might be interested in a different question than the one that a minimized MAPE is answering; on the other hand, relying solely on the point forecast offers a restricted perspective, neglecting the broader landscape of characteristics such as volatility that may be of interest. For instance, the necessity of computing prediction intervals requires a tailored approach. The amalgamation method applied for the ensemble forecast needs to be taken into account, coupled with the specifics of the computational tools enlisted in implementing the solution^[The solution proposed earlier, a neural network, would probably create more problems than the one it solves in the context of computing prediction intervals.]. Merely optimizing a singular statistic fails to account for the multi-faceted demands of comprehensive forecasting.
+> "_If the test set includes data from 2008–2009, I’m speculating that depressed tourism numbers as a result of the global economic recession could have caused a significant difference in the trends._" 
+
+This stresses the importance of understanding the underlying assumptions and the power of using _models_ instead of _filters_, or in combinations with them.
+
+Gaming a specific statistic is not a viable tool for general or specific purpose forecasting in a real-world scenario: on the one hand because we might be interested in a different question than the one that a minimized MAPE is answering; on the other hand, relying solely on the point forecast offers a restricted perspective, neglecting the broader landscape of characteristics such as volatility that may be of interest. For instance, the necessity of computing prediction intervals requires a tailored approach. The amalgamation method applied for the ensemble forecast needs to be taken into account, coupled with the specifics of the computational tools enlisted in implementing the solution^[The solution proposed earlier, a neural network, would probably pose the same overfitting issues and often outputs overconfident intervals.]. Merely optimizing a singular statistic fails to account for the multi-faceted demands of comprehensive forecasting.
 
 A last remark is that in a real-world scenario, a forecaster is dealing with the unavailability of such a constant feedback loop, as the contest winner had, of submitting his results and observing a test MAPE on the Kaggle leaderboard. It is often the case that the chances to submit forecasts or act on them face time constraints and the absolute absence of this kind of feedback loop, and this implies the need for more robust planning and instruments, built upon the impossibility of observing the out-of-sample data and any related statistic.
 
