@@ -344,7 +344,11 @@ First of all, initializing a naïve model will allow us to use `R` to compute bo
 ```{r validation NAIVE forecasts}
 naive_model <- train %>% 
   na.omit() %>% 
-  model(NAIVE(Value))
+  model(
+    NAIVE(
+      Value
+      )
+    )
 ```
 
 `naive_model` will contain a `mable` for all the series, to be used to compute both _training_ and _validation_ errors.
@@ -464,7 +468,7 @@ The Mean Absolute Scaled Error (MASE) serves as a robust performance metric than
 
 It is an alternative to _percentage errors_ such as the MAPE. For a non-seasonal time series, a useful way to define a scaled error uses naïve forecasts: because the numerator and denominator both involve values on the scale of the original data, scaled errors are independent of the scale of the data.
 
-### Training Period:
+### Training Period: {#sec-train_MASE}
 
 ```{r tbl training MASE}
 #| tbl-cap: "Training MASE for the first 10 series."
@@ -650,6 +654,15 @@ ggplot(
     axis.text.x = element_blank()
   )
 ```
+
+What do we learn? How does performance differ between the training and validation periods? How does performance range across series?
+
+There is no apparent pattern in all the scatterplots. The distribution of MAPE and MASE pairs is highly asymmetrical and skewed towards lower values, but the performance of the naïve method varies across series.  In most cases, the points are above the 45-degree line, indicating that, on average, the performance is worse on the validation set compared to the training set.
+
+There are some evident outliers, corresponding to the same series for both accuracy measures; These outliers mostly fall above the bisection line, confirming a deterioration in performance across sets, which is a tell-tale sign of overfitting. In simple terms, the chosen model is not on average generalizing well, hindering its predictive abilities.
+
+A final word on the MASE pairplots: since the entire training set has an accuracy score of 1 for all series (as explained in @sec-train_MASE, we are scaling naïve forecasts by the same naïve forecasts), all points align on the same vertical line, making interpretation challenging. Introducing some noise allows some separation and exposes the absence of patters. This distribution, on the y-axis, reveals two important points: first of all, most predictions on the validation set center around 0, but in numerous series the forecasting method is underperforming. Secondly, outliers are clustered in groups: to fine-tune the algorithm, insights could be obtained to address this overall loss of accuracy by examining the series by these groups and choose a more appropriate forecasting method.
+
 
 ## Ensemble Methods
 
