@@ -76,11 +76,25 @@ lapply(
   FUN = require,
   character.only = TRUE
 )
+```
 
+```{r theme setup}
+#| echo: false
+custom_typeface <- "Atkinson Hyperlegible"
+
+theme_updater <- ggthemes::theme_tufte(
+    base_size = 16,
+    base_family = custom_typeface,
+    ticks = F
+  ) +
+  theme(
+    legend.position = "none"
+  )
+  
 theme_set(
   ggthemes::theme_tufte(
     base_size = 16,
-    base_family = "Atkinson Hyperlegible"
+    base_family = custom_typeface
   )
 )
 ```
@@ -219,9 +233,9 @@ tmelt %>%
   )
 ```
 
-While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is discernible. Additionally, noteworthy outliers emerge, warranting further investigation. Furthermore, subtle indications of cyclicality in certain series can be observed.
+While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is discernible. Additionally, noteworthy outliers can be spotted, warranting further investigation. Furthermore, indications of cyclicality in certain series can be observed.
 
-A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. This can be attributed to the distinct initial timestamps of the series. We can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
+A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. This can be attributed to the difference in the initial timestamps of the series. We can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
 
 ```{r NAs by year table}
 #| tbl-cap: "Missing observation by year: the presence of missing observations is related to the scarcity of long-run time series."
@@ -364,7 +378,7 @@ The Mean Absolute Percentage Error (MAPE) is suitable for evaluating the forecas
 
 Last but not least, the Root Mean Squared Error (RMSE) is suitable to penalize larger errors more heavily^[Outliers might therefore skew its measurement.]. It provides a balance between considering both large and small errors; like MAE, it doesn't consider the direction of errors.
 
-Having a very wide range of values, as seen in @tbl-range, the MAPE is the candidate for the most useful error measure in this setting, to ensure consistency when evaluating the forecasting error across different scaled series.
+Having a very wide range of values, as seen in @tbl-range, the MAPE is the candidate for the most useful error measure among the ones listed^[Although scaled errors are not considered and could address the issue of evaluating performance of series having a wide range, while not being sensitive to small values.], to ensure consistency when evaluating the forecasting error across different scaled series.
 
 ## Computing MAPE
 
@@ -446,8 +460,7 @@ MAPE_comparison
 
 > *The performance measure used in the competition is Mean Absolute Scaled Error (MASE). Explain the advantage of MASE and compute the training and validation MASE for the naive forecasts.*
 
-The Mean Absolute Scaled Error (MASE) serves as a robust performance metric thanks to its scale-independence, a quality that renders it well-suited for the comparative assessment of forecast accuracy across diverse time series characterized by differing scales and magnitudes, such as in this dataset, accounting for the inherent scale differences among time series.
-scaling the errors based on the training MAE from a simple forecast method.
+The Mean Absolute Scaled Error (MASE) serves as a robust performance metric thanks to its scale-independence. This quality makes it well-suited for the comparative assessment of forecast accuracy across diverse time series characterized by differing scales and magnitudes, such as in this dataset, accounting for the inherent scale differences among them by scaling the errors based on the training MAE from a simple forecast method.
 
 It is an alternative to _percentage errors_ such as the MAPE. For a non-seasonal time series, a useful way to define a scaled error uses naïve forecasts: because the numerator and denominator both involve values on the scale of the original data, scaled errors are independent of the scale of the data.
 
@@ -464,7 +477,7 @@ errors_training %>%
   head(10)
 ```
 
-Since MASE indicates the effectiveness of the forecasting algorithm for a naïve forecast, its value is greater than one 1 indicates the algorithm is performing poorly compared to the naïve forecast, and vice-versa: hence, since we have been computing the naïve MASE of in-sample data, it is equal to 1 for all time series in our training dataset.
+Since MASE indicates the effectiveness of the forecasting algorithm for a naïve forecast, a value greater than one 1 indicates that the algorithm is performing poorly compared to the naïve forecast, and vice-versa: hence, since we have been computing the naïve MASE of in-sample data, it is equal to 1 for all time series in our training dataset.
 
 ### Validation Period:
 
@@ -550,6 +563,11 @@ ggplot(
   alpha = .8
 ) +
   geom_rug() +
+  geom_abline(
+    slope = 1,
+    color = "grey80",
+    linetype = "dashed"
+  ) +
   labs(
     title = "Training and Validation MAPE pairs, colored by series",
     x = "Training MAPE",
@@ -558,14 +576,7 @@ ggplot(
   scale_color_viridis_d(
     option = "cividis"
   ) +
-  ggthemes::theme_tufte(
-    base_size = 16,
-    base_family = "Atkinson Hyperlegible",
-    ticks = F
-  ) +
-  theme(
-    legend.position = "none"
-  )
+  theme_updater
 ```
 
 ```{r MASE pairs tibble}
@@ -602,14 +613,7 @@ ggplot(
   scale_color_viridis_d(
     option = "cividis"
   ) +
-  ggthemes::theme_tufte(
-    base_size = 16,
-    base_family = "Atkinson Hyperlegible",
-    ticks = F
-  ) +
-  theme(
-    legend.position = "none"
-  )
+  theme_updater
 ```
 
 We can add some jitter to better visualize the points:
@@ -638,7 +642,7 @@ ggplot(
   ) +
   ggthemes::theme_tufte(
     base_size = 16,
-    base_family = "Atkinson Hyperlegible",
+    base_family = custom_typeface,
     ticks = F
   ) +
   theme(
@@ -773,7 +777,7 @@ As cleverly stated by the contest winner:
 
 This stresses the importance of understanding the underlying assumptions and the power of using _models_ instead of _filters_, or in combinations with them.
 
-Gaming a specific statistic is not a viable tool for general or specific purpose forecasting in a real-world scenario: on the one hand because we might be interested in a different question than the one that a minimized MAPE is answering; on the other hand, relying solely on the point forecast offers a restricted perspective, neglecting the broader landscape of characteristics such as volatility that may be of interest. For instance, the necessity of computing prediction intervals requires a tailored approach. The amalgamation method applied for the ensemble forecast needs to be taken into account, coupled with the specifics of the computational tools enlisted in implementing the solution^[The solution proposed earlier, a neural network, would probably pose the same overfitting issues and often outputs overconfident intervals.]. Merely optimizing a singular statistic fails to account for the multi-faceted demands of comprehensive forecasting.
+Gaming a specific statistic is not a viable tool for general or specific purpose forecasting in a real-world scenario: on the one hand because we might be interested in a different question than the one that a minimized MAPE is answering, or in forecasting for longer time windows; on the other hand, relying solely on the point forecast offers a restricted perspective, neglecting the broader landscape of characteristics such as volatility that may be of interest. For instance, the necessity of computing prediction intervals requires a tailored approach. The amalgamation method applied for the ensemble forecast needs to be taken into account, coupled with the specifics of the computational tools enlisted in implementing the solution^[One of the solutions proposed earlier, a neural network, would probably pose the same overfitting issues and often outputs overconfident intervals.]. Merely optimizing a singular statistic fails to account for the multi-faceted demands of comprehensive forecasting.
 
 A last remark is that in a real-world scenario, a forecaster is dealing with the unavailability of such a constant feedback loop, as the contest winner had, of submitting his results and observing a test MAPE on the Kaggle leaderboard. It is often the case that the chances to submit forecasts or act on them face time constraints and the absolute absence of this kind of feedback loop, and this implies the need for more robust planning and instruments, built upon the impossibility of observing the out-of-sample data and any related statistic.
 
