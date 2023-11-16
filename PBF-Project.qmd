@@ -382,11 +382,11 @@ The Mean Absolute Percentage Error (MAPE) is suitable for evaluating the forecas
 
 Last but not least, the Root Mean Squared Error (RMSE) is suitable to penalize larger errors more heavily^[Outliers might therefore skew its measurement.]. It provides a balance between considering both large and small errors; like MAE, it doesn't consider the direction of errors.
 
-Having a very wide range of values, as seen in @tbl-range, the MAPE is the candidate for the most useful error measure among the ones listed^[Although scaled errors are not considered and could address the issue of evaluating performance of series having a wide range, while not being sensitive to small values.], to ensure consistency when evaluating the forecasting error across different scaled series.
+Having a very wide range of values, as seen in @tbl-range, the MAPE is the candidate for the most useful error measure among the ones listed^[Although scaled errors are not considered and could address the issue of evaluating the performance of series having a wide range, while not being sensitive to small values.], to ensure consistency when evaluating the forecasting error across different scaled series.
 
 ## Computing MAPE
 
-> *For each series, compute MAPE of the naive forecasts once for the training period and once for the validation period.*
+> *For each series, compute the MAPE of the naive forecasts once for the training period and once for the validation period.*
 
 ### Training Period:
 
@@ -555,7 +555,7 @@ MAPE_pairs <- tibble(
 ```{r MAPE scatterplot}
 #| fig-width: 12
 #| fig-height: 9
-#| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
+#| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axes, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 ggplot(
   data = MAPE_pairs, 
   aes(
@@ -596,7 +596,7 @@ MASE_pairs <-
 ```{r MASE scatterplot}
 #| fig-width: 12
 #| fig-height: 9
-#| fig-cap: "Scatterplot of training and validation MASE pairs: on both axis, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
+#| fig-cap: "Scatterplot of training and validation MASE pairs: on both axes, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 #| label: fig-mase
 ggplot(
   data =
@@ -655,13 +655,11 @@ ggplot(
   )
 ```
 
-What do we learn? How does performance differ between the training and validation periods? How does performance range across series?
-
 There is no apparent pattern in all the scatterplots. The distribution of MAPE and MASE pairs is highly asymmetrical and skewed towards lower values, but the performance of the naïve method varies across series.  In most cases, the points are above the 45-degree line, indicating that, on average, the performance is worse on the validation set compared to the training set.
 
 There are some evident outliers, corresponding to the same series for both accuracy measures; These outliers mostly fall above the bisection line, confirming a deterioration in performance across sets, which is a tell-tale sign of overfitting. In simple terms, the chosen model is not on average generalizing well, hindering its predictive abilities.
 
-A final word on the MASE pairplots: since the entire training set has an accuracy score of 1 for all series (as explained in @sec-train_MASE, we are scaling naïve forecasts by the same naïve forecasts), all points align on the same vertical line, making interpretation challenging. Introducing some noise allows some separation and exposes the absence of patters. This distribution, on the y-axis, reveals two important points: first of all, most predictions on the validation set center around 0, but in numerous series the forecasting method is underperforming. Secondly, outliers are clustered in groups: to fine-tune the algorithm, insights could be obtained to address this overall loss of accuracy by examining the series by these groups and choose a more appropriate forecasting method.
+A final word on the MASE pair plots: since the entire training set has an accuracy score of 1 for all series (as explained in @sec-train_MASE, we are scaling naïve forecasts by the same naïve forecasts), all points align on the same vertical line, making interpretation challenging. Introducing some noise allows some separation and exposes the absence of patterns. This distribution, on the y-axis, reveals two important points: first of all, most predictions on the validation set center around 0, but in numerous series the forecasting method is underperforming. Secondly, outliers are clustered in groups: to fine-tune the algorithm, insights could be obtained to address this overall loss of accuracy by examining the series by these groups and choosing a more appropriate forecasting method.
 
 
 ## Ensemble Methods
@@ -772,7 +770,7 @@ Automation of model selection and amalgamation could be achieved through the ado
 
 To find these hyper-parameter estimates numerically, then, we could use different approaches, ranging from a linear combination of weights to a more complex deep neural network, capable of receiving a matrix containing forecasts from various ensemble methods as input, which would enable the learning of optimal weights through backpropagation, facilitated by a properly calibrated activation function. In both cases, learning the model would be equivalent to setting the proper mix of forecasts.
 
-In other words, a machine learning based approach might prove helpful in choosing the best combination of forecast, with the aim of minimising the MASE of the validation set; nevertheless, caution should be used as it would introduce another potential source of overfitting.
+In other words, a machine learning-based approach might prove helpful in choosing the best combination of forecasts, to minimize the MASE of the validation set; nevertheless, caution should be used as it would introduce another potential source of overfitting.
 
 However:
 
