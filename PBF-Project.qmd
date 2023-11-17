@@ -793,3 +793,18 @@ Gaming a specific statistic is not a viable tool for general or specific purpose
 A last remark is that in a real-world scenario, a forecaster is dealing with the unavailability of such a constant feedback loop, as the contest winner had, of submitting his results and observing a test MAPE on the Kaggle leaderboard. It is often the case that the chances to submit forecasts or act on them face time constraints and the absolute absence of this kind of feedback loop, and this implies the need for more robust planning and instruments, built upon the impossibility of observing the out-of-sample data and any related statistic.
 
 To summarise, forecasting in a real-world context is not only about minimizing errors, but also about understanding the uncertainty in the phenomenon, to better assess the forecasting performance consistently and over time, and not on a specific data "snapshot" taken in a specific window.
+
+
+```{r create script}
+#| echo: false
+#| result: hide
+flag = FALSE
+
+if(flag == TRUE) {
+    knitr::purl(
+        input = "/Users/themagician/Documents/Coding/GitHub/PBF-Project/PBF-Project.qmd"
+        output = "/Users/themagician/Documents/Coding/GitHub/PBF-Project/Script",
+        documentation = 2
+        )
+}
+```
