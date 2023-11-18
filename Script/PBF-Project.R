@@ -59,22 +59,16 @@
 #| results: "hide"
 #| warning: false
 #| message: false
-
-# knitr::opts_chunk$set(
-#   echo = T,
-#   dev = "cairo_pdf"
-# )
-
-
-
-setwd(
-    "/Users/themagician/Documents/Coding/GitHub/PBF-Project"
+knitr::opts_chunk$set(
+  echo = T,
+  dev = "cairo_pdf"
 )
 
 libraries_list <- c(
   "tidyverse",
   "fpp3",
   "ggthemes"
+  
 )
 
 lapply(
@@ -84,13 +78,13 @@ lapply(
 )
 
 #' 
-## ----theme setup--------------------------------------------------------------
+## ----theme setting------------------------------------------------------------
 #| echo: false
-# custom_typeface <- "Atkinson Hyperlegible"
+custom_typeface <- "Atkinson Hyperlegible"
 
 theme_updater <- ggthemes::theme_tufte(
     base_size = 16,
-    # base_family = custom_typeface,
+    base_family = custom_typeface,
     ticks = F
   ) +
   theme(
@@ -100,7 +94,7 @@ theme_updater <- ggthemes::theme_tufte(
 theme_set(
   ggthemes::theme_tufte(
     base_size = 16,
-    # base_family = custom_typeface
+    base_family = custom_typeface
   )
 )
 
@@ -663,7 +657,7 @@ ggplot(
 #' 
 #' There is no apparent pattern in all the scatterplots. The distribution of MAPE and MASE pairs is highly asymmetrical and skewed towards lower values, but the performance of the naïve method varies across series.  In most cases, the points are above the 45-degree line, indicating that, on average, the performance is worse on the validation set compared to the training set.
 #' 
-#' There are some evident outliers, corresponding to the same series for both accuracy measures; These outliers mostly fall above the bisection line, confirming a deterioration in performance across sets, which is a tell-tale sign of overfitting. In simple terms, the chosen model is not on average generalizing well, hindering its predictive abilities.
+#' There are some evident outliers, corresponding to the same series for both accuracy measures; these outliers mostly fall above the bisection line, confirming a deterioration in performance across sets, which is a tell-tale sign of overfitting. In simple terms, the chosen model is not on average generalizing well, hindering its predictive abilities.
 #' 
 #' A final word on the MASE pair plots: since the entire training set has an accuracy score of 1 for all series (as explained in @sec-train_MASE, we are scaling naïve forecasts by the same naïve forecasts), all points align on the same vertical line, making interpretation challenging. Introducing some noise allows some separation and exposes the absence of patterns. This distribution, on the y-axis, reveals two important points: first of all, most predictions on the validation set center around 0, but in numerous series the forecasting method is underperforming. Secondly, outliers are clustered in groups: to fine-tune the algorithm, insights could be obtained to address this overall loss of accuracy by examining the series by these groups and choosing a more appropriate forecasting method.
 #' 
@@ -804,12 +798,12 @@ ts_trend_fit %>%
 ## ----create script------------------------------------------------------------
 #| echo: false
 #| result: hide
-flag = FALSE
+flag = TRUE
 
 if(flag == TRUE) {
     knitr::purl(
-        input = "/Users/themagician/Documents/Coding/GitHub/PBF-Project/PBF-Project.qmd",
-        output = "/Users/themagician/Documents/Coding/GitHub/PBF-Project/Script",
+        input = "PBF-Project.qmd",
+        output = "Script/PBF-Project.R",
         documentation = 2
         )
 }
