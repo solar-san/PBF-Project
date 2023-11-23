@@ -235,6 +235,42 @@ tmelt %>%
 
 While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is discernible. Additionally, noteworthy outliers can be spotted, warranting further investigation. Furthermore, indications of cyclicality in certain series can be observed.
 
+Using boxplots (@fig-box) allow us to focus on the distribution of values, obtaining a clearer visualization of the overall trend.
+
+```{r tmelt boxplot}
+#| label: fig-box
+#| fig-cap: "This version of the boxplot, introduced by E. Tufte in 'Visual Display of Quantitative Information' (2001), is interpreted in the following manner: a point represent the median, while the white interval around it represent the IQR. The black lines are the whiskers of the boxplot, extending to 3/2 times the IQR."
+#| fig-widh: 12
+#| fig-height: 7
+#| warning: false
+tmelt %>% 
+  group_by(
+    Identifier
+  ) %>% 
+  ggplot(
+    aes(
+      x = Year %>% as_factor,
+      y = Value
+    )
+  ) +
+  geom_tufteboxplot(
+    size = .7,
+    na.rm = T
+  ) +
+  scale_y_log10() +
+  labs(
+    title = "Tourism Time Series: Boxplots",
+    x = "Year",
+    y = expression(log[10](Value))
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 270
+    )
+  )
+```
+
 A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. This can be attributed to the difference in the initial timestamps of the series. We can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
 
 ```{r NAs by year table}
