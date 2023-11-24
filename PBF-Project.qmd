@@ -241,12 +241,12 @@ tmelt %>%
 
 While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is discernible. Additionally, noteworthy outliers can be spotted, warranting further investigation. Furthermore, indications of cyclicality in certain series can be observed.
 
-Using boxplots (@fig-box) allow us to focus on the distribution of values, obtaining a clearer visualization of the overall trend by de-cluttering the chart and aggregating the overall information available. We can see that, after the availability of data increases, the process stabilizes within a range of values. 
+Using boxplots (@fig-box) allows us to focus on the distribution of values, obtaining a clearer visualization of the overall trend by de-cluttering the chart and aggregating the overall information available. We can see that, after the availability of data increases, the process stabilizes within a range of values. 
 
 ```{r tmelt boxplot}
 #| label: fig-box
-#| fig-cap: "This version of the boxplot, introduced by E. Tufte in 'Visual Display of Quantitative Information' (2001), is interpreted in the following manner: the black lines represent the IQR, with a white space positioned at the median. The black dots indicates the end of the whiskers of the boxplot, extending to 3/2 times the IQR."
-#| fig-widh: 12
+#| fig-cap: "This version of the boxplot, introduced by E. Tufte in 'Visual Display of Quantitative Information' (2001), is interpreted in the following manner: the black lines represent the IQR, with a white space positioned at the median. The black dots indicate the end of the whiskers of the boxplot, extending to 3/2 times the IQR."
+#| fig-width: 12
 #| fig-height: 7
 #| warning: false
 tmelt %>% 
