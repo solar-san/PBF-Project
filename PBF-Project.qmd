@@ -68,7 +68,6 @@ libraries_list <- c(
   "tidyverse",
   "fpp3",
   "ggthemes"
-  
 )
 
 lapply(
@@ -121,7 +120,7 @@ data_main %>%
 
 We are missing `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of the observations.
 
-## Creating `tsibble`
+## Creating a `tsibble`
 
 ```{r creating tourism tsibble}
 tourism_full <- data_main %>% 
@@ -420,7 +419,7 @@ When combining forecasting results for multiple time series it is crucial to acc
 
 The Mean Absolute Error (MAE) is a suitable measure to quantify the average absolute errors across all series without considering the direction of the errors. It provides a straightforward indication of the average magnitude of forecasting errors. 
 
-The Average Error^[Defined as the mean of all individual errors.] can complement the MAE by providing a simple measure of the overall bias in the forecasting. However, it does not consider the direction of errors and might not be suitable if positive and negative errors can cancel each other out. 
+The Average Error^[Defined as the mean of all individual errors.] can complement the MAE by providing a simple measure of the overall bias in the forecasting. However, it might not be suitable if positive and negative errors can cancel each other out. 
 
 The Mean Absolute Percentage Error (MAPE) is suitable for evaluating the forecasting accuracy in percentage terms, which can be particularly useful when dealing with many series of different scales. However, it is sensitive to series with small actual values. 
 
@@ -499,7 +498,12 @@ errors_validation[1:10, ] %>%
   )
 ) 
 
-colnames(MAPE_comparison) <- c("Set", errors_training$Identifier %>% as.character() %>% unique %>% head(10))
+colnames(MAPE_comparison) <- c(
+    "Set", 
+    errors_training$Identifier %>% 
+    as.character() %>% unique 
+    %>% head(10)
+)
 
 MAPE_comparison
 ```
@@ -577,7 +581,13 @@ errors_validation[1:10, ] %>%
   )
 ) 
 
-colnames(MASE_comparison) <- c("Set", errors_training$Identifier %>% as.character() %>% unique %>% head(10))
+colnames(MASE_comparison) <- c(
+    "Set", 
+    errors_training$Identifier %>% 
+    as.character() %>% 
+    unique %>% 
+    head(10)
+)
 
 MASE_comparison
 ```
@@ -711,8 +721,8 @@ A final word on the MASE pair plots: since the entire training set has an accura
 > *The competition winner, Lee Baker, used an ensemble of three methods:*
 >
 > -   *Naive forecasts multiplied by a constant trend*[^1].
-> -   Linear regression.
-> -   Exponentially-weighted linear regression.
+> -   _Linear regression_.
+> -   _Exponentially-weighted linear regression_.
 
 [^1]: Global/local trend: "globally tourism has grown at a rate of 6% annually."
 
@@ -802,13 +812,13 @@ A polynomial fitting is useful when the relationship between predictor and respo
 
 While the $R^2$ represents the portion of explained variability by the model, it is based on the _sum of squares_, which is inconsistent with the given error statistic, the MASE; as written in @sec-measures, it penalizes larger errors more heavily, while the MASE considers the average magnitude of forecasting errors. 
 
-Last but not least, assuming a simple univariate trended linear model, it is also equivalent to the squared correlation between the dependent variable and the predictor^[In a multivariate model, the $R^2$ it corresponds to the squared correlation between $y_t$ and $\hat y_t$, so this point still stands.], so it is not a proper weight to combine forecasts.
+Last but not least, assuming a simple univariate trended linear model, it is also equivalent to the squared correlation between the dependent variable and the predictor^[In a multivariate model, the $R^2$ corresponds to the squared correlation between $y_t$ and $\hat y_t$, so this point still stands.], so it is not a proper weight to combine forecasts.
 
 ### f. *If we were to consider exponential smoothing, what particular type(s) of exponential smoothing are reasonable candidates?* {.unnumbered}
 
 We could implement two different exponential smoothings that include a Trend component. Viable candidates are Holt’s linear method $(A, N)$	and Additive damped trend method $(A_d, N)$: their performance should be tested against both the validation and test sets to choose the most appropriate.
 
-### g. *The winner concludes with possible improvements one being _an investigation into how to come up with a blending ensemble method that doesn't use much manual tweaking would also be of benefit_. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?* {.unnumbered}
+### g. *The winner concludes with possible improvements one being "an investigation into how to come up with a blending ensemble method that doesn't use much manual tweaking would also be of benefit". Can you suggest methods or an approach that would lead to easier automation of the ensemble step?* {.unnumbered}
 
 Automation of model selection and amalgamation could be achieved through the adoption of a "loss function"-centered approach, constructed upon the ensemble amalgamation of diverse methods. The allocation of weights to each method's forecast could be fine-tuned by assessing their performance within the parameter space on the validation set, employing a weighted least squares method. 
 

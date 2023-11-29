@@ -68,7 +68,6 @@ libraries_list <- c(
   "tidyverse",
   "fpp3",
   "ggthemes"
-  
 )
 
 lapply(
@@ -121,7 +120,7 @@ data_main %>%
 #' 
 #' We are missing `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of the observations.
 #' 
-#' ## Creating `tsibble`
+#' ## Creating a `tsibble`
 #' 
 ## ----creating tourism tsibble-------------------------------------------------
 tourism_full <- data_main %>% 
@@ -136,7 +135,7 @@ tourism_full <- data_main %>%
 #' `tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to apply the tidy forecasting workflow to all 518 time series at once. Its main variables are:
 #' 
 #' - `index`: `Year`, as in the original data frame.
-#' - `key`: `Identifier`, a new categorical variable allowing us to transform the data frame to the tidy format; it consists in a set of _labels_ that identify each time series.
+#' - `key`: `Identifier`, a new categorical variable allowing us to transform the data frame into a tidy format; it consists of a set of _labels_ that identify each time series.
 #' - `value`: the $Y_t$ value for each time series.
 #' 
 #' 
@@ -170,7 +169,7 @@ tmelt %>%
 #' 
 #' ## Full Plot
 #' 
-#' In all the subsequent plots, a $log_{10}$ transformation has been employed exclusively for representing the time series on the y-axis. This adjustment becomes necessary since the original data range^[$10^9$, shown in @tbl-range.] does not permit a clear and meaningful visualization of the series when plotted together.
+#' In all the subsequent plots, a $log_{10}$ transformation has been employed exclusively for representing the time series on the y-axis. This adjustment becomes necessary since the original data range^[$10^9$, as derived from the data shown in @tbl-range.] does not permit a clear and meaningful visualization of the series when plotted together.
 #' 
 ## -----------------------------------------------------------------------------
 #| label: tbl-range
@@ -198,7 +197,7 @@ tmelt %>%
 #' 
 ## ----full viz train-----------------------------------------------------------
 #| label: fig-every
-#| fig-cap: "Printing a legend for 518 different series is not a viable option. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values."
+#| fig-cap: "Printing a legend for 518 different series is not a viable option. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values; a rug plot on the left-hand side represents the log-transformed distribution of values and allows to determine the overall skewness, position, and asymmetry."
 #| fig-full: 12
 #| fig-height: 12
 #| warning: false
@@ -213,6 +212,11 @@ tmelt %>%
     ) + 
   geom_line(
     alpha = .8
+  ) + 
+  geom_rug(
+    sides = "l",
+    length = unit(0.02, "npc"),
+    alpha = .9
   ) + 
   scale_y_log10() +
   scale_color_viridis_d(
@@ -229,11 +233,50 @@ tmelt %>%
       1,
       3,
       1
-    )
+    ),
+    axis.ticks.y = element_blank()
   )
 
 #' 
-#' While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is discernible. Additionally, noteworthy outliers can be spotted, warranting further investigation. Furthermore, indications of cyclicality in certain series can be observed.
+#' While plotting all 518 series simultaneously may hinder the clear identification of specific details, a distinct overall upward trend is visible. Additionally, noteworthy outliers can be spotted, warranting further investigation. Furthermore, indications of cyclicality in certain series can be observed, as well as spikes and steep falls.
+#' 
+#' Using boxplots (@fig-box) allows us to focus on the distribution of values, obtaining a clearer visualization of the overall trend by de-cluttering the chart and aggregating the overall information available. We can see that, after the availability of time series increases, the process stabilizes within a range of values. 
+#' 
+## ----tmelt boxplot------------------------------------------------------------
+#| label: fig-box
+#| fig-cap: "This version of the boxplot, introduced by E. Tufte in 'Visual Display of Quantitative Information' (2001), is interpreted in the following manner: the black lines represent the IQR, with a white space positioned at the median. The black dots indicate the end of the whiskers of the boxplot, extending to 3/2 times the IQR."
+#| fig-width: 12
+#| fig-height: 7
+#| warning: false
+tmelt %>% 
+  group_by(
+    Identifier
+  ) %>% 
+  ggplot(
+    aes(
+      x = Year %>% as_factor,
+      y = Value
+    )
+  ) +
+  geom_tufteboxplot(
+    median.type = "line",
+    whisker.type = "point",
+    size = 1.5,
+    na.rm = TRUE
+  ) +
+  scale_y_log10() +
+  labs(
+    title = "Tourism Time Series: De-Cluttering with Tufte Boxplots",
+    x = "Year",
+    y = expression(log[10](Value))
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 270
+    )
+  )
+
 #' 
 #' A check for `NA`s has already been made while loading data (@sec-dataload) and it showed the presence of a large number of missing values, corresponding to `r round(100*(data_main %>% is.na() %>% sum) / (data_main %>% nrow() * data_main %>% ncol()), digits = 2)`% of all observations. This can be attributed to the difference in the initial timestamps of the series. We can categorize these series based on their respective starting years, indicating that an alternative visualization approach could be effectively implemented through this grouping method (@fig-tsgrouped).
 #' 
@@ -257,7 +300,7 @@ tmelt %>%
 #' 
 ## ----ts plot grouped by length------------------------------------------------
 #| label: fig-tsgrouped
-#| fig-cap: "All series have been grouped by starting year and plotted to achieve more clarity. Each subtitle represents the number of periods for each subset. The same color mapping of @fig-every has been used to differentiate the series."
+#| fig-cap: "All series have been grouped by starting year and plotted to achieve more clarity. Each subtitle represents the number of periods for each subset. The same color mapping of @fig-every has been used to differentiate the series. The y-axis scale has been allowed to change freely to enhance the time series patterns visible in each subplot."
 #| fig-width: 12
 #| fig-height: 18
 #| warning: false
@@ -282,17 +325,17 @@ tmelt %>%
       x = Year
       )
   ) +
-  facet_wrap(
-    ~series_length,
-    nrow = 6,
-    ncol = 3,
-    scales = "free"
-  ) +
   geom_line(
     aes(
       y = Value,
       color = Identifier
     )
+  ) +
+  facet_wrap(
+    ~series_length,
+    nrow = 6,
+    ncol = 3,
+    scales = "free"
   ) +
   labs(
     title = "Tourism Time Series By Starting Year",
@@ -327,7 +370,7 @@ validation %>%
   head(8)
 
 #' 
-#' The logic behind partitioning the series into a *training* and *validation* set is to *estimate the forecasting error*: we can train a model or apply a filter to the train set and use it to assess its performance with out-of-sample data. The main disadvantage of this approach is that we are not using all the information available to train our model; moreover, we are not computing *true forecasts*, therefore the accuracy measures from the residuals will be smaller.
+#' The logic behind partitioning the series into a *training* and *validation* set is to *estimate the forecasting error*: we can train a model or apply a filter to the train set and use it to estimate its performance with out-of-sample data. The main disadvantage of this approach is that we are not using all the information available to train our model; moreover, we are not computing *true forecasts*, therefore the accuracy measures from the residuals will be smaller.
 #' 
 #' ## Naïve Forecasts
 #' 
@@ -380,7 +423,7 @@ naive_fc %>%
 #' 
 #' The Mean Absolute Percentage Error (MAPE) is suitable for evaluating the forecasting accuracy in percentage terms, which can be particularly useful when dealing with many series of different scales. However, it is sensitive to series with small actual values. 
 #' 
-#' Last but not least, the Root Mean Squared Error (RMSE) is suitable to penalize larger errors more heavily^[Outliers might therefore skew its measurement.]. It provides a balance between considering both large and small errors; like MAE, it doesn't consider the direction of errors.
+#' Last but not least, the Root Mean Squared Error (RMSE) is suitable to penalize larger errors more heavily^[Outliers might therefore skew its measurement.]. It provides a balance between considering both large and small errors; like the MAE, it doesn't consider the direction of errors.
 #' 
 #' Having a very wide range of values, as seen in @tbl-range, the MAPE is the candidate for the most useful error measure among the ones listed^[Although scaled errors are not considered and could address the issue of evaluating the performance of series having a wide range, while not being sensitive to small values.], to ensure consistency when evaluating the forecasting error across different scaled series.
 #' 
@@ -625,7 +668,7 @@ ggplot(
 ## ----jittered MASE pairs------------------------------------------------------
 #| fig-width: 12
 #| fig-height: 9
-#| fig-cap: "Jittered scatterplot of all MASE pairs, as in @fig-mase, with jittering."
+#| fig-cap: "Jittered scatterplot of all MASE pairs< same as in @fig-mase, but with added noise to split the cluster."
 ggplot(
   data =
     MASE_pairs,
@@ -667,8 +710,8 @@ ggplot(
 #' > *The competition winner, Lee Baker, used an ensemble of three methods:*
 #' >
 #' > -   *Naive forecasts multiplied by a constant trend*[^1].
-#' > -   Linear regression.
-#' > -   Exponentially-weighted linear regression.
+#' > -   _Linear regression_.
+#' > -   _Exponentially-weighted linear regression_.
 #' 
 #' [^1]: Global/local trend: "globally tourism has grown at a rate of 6% annually."
 #' 
@@ -764,7 +807,7 @@ ts_trend_fit %>%
 #' 
 #' We could implement two different exponential smoothings that include a Trend component. Viable candidates are Holt’s linear method $(A, N)$	and Additive damped trend method $(A_d, N)$: their performance should be tested against both the validation and test sets to choose the most appropriate.
 #' 
-#' ### g. *The winner concludes with possible improvements one being _an investigation into how to come up with a blending ensemble method that doesn't use much manual tweaking would also be of benefit_. Can you suggest methods or an approach that would lead to easier automation of the ensemble step?* {.unnumbered}
+#' ### g. *The winner concludes with possible improvements one being "an investigation into how to come up with a blending ensemble method that doesn't use much manual tweaking would also be of benefit". Can you suggest methods or an approach that would lead to easier automation of the ensemble step?* {.unnumbered}
 #' 
 #' Automation of model selection and amalgamation could be achieved through the adoption of a "loss function"-centered approach, constructed upon the ensemble amalgamation of diverse methods. The allocation of weights to each method's forecast could be fine-tuned by assessing their performance within the parameter space on the validation set, employing a weighted least squares method. 
 #' 
@@ -798,7 +841,7 @@ ts_trend_fit %>%
 ## ----create script------------------------------------------------------------
 #| echo: false
 #| result: hide
-flag = TRUE
+flag = FALSE
 
 if(flag == TRUE) {
     knitr::purl(
