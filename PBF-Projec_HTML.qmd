@@ -2,40 +2,54 @@
 title: "Project: The Forecasting Tourism 2010 Competition"
 subtitle: "EM1415"
 author: "Marco Solari, 875475"
-date-modified: "`r Sys.Date()`"
-format:
-  html:
-    theme: github
-    toc: true
-    toc-location: left
-    fig-align: center
-    fig-width: 10
-    fig-height: 10
-    tbl-cap-location: margin
-    fig-cap-location: bottom
-    df-print: paged
-    html-math-method: katex
-    code-overflow: scroll
-    code-copy: hover
-    code-fold: show
-    highlight-style: breeze
-    citations-hover: true
-    footnotes-hover: true
-    header-includes: |
-      <meta name="author" content="solar-san">
-      <meta name="image" property="">
-      <meta 
-      name="description"
-      content="">
-      <link rel="preconnect" href="https://fonts.googleapis.com">
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fira+Code&display=swap" rel="stylesheet">
-mainfont: "Atkinson Hyperlegible"
+format: pdf
+papersize: a4
+geometry:
+  - left=23mm
+  - right=35.5mm
+  - marginparwidth=23mm
+  - top=30mm
+  - bottom=30mm
+toc: true
+highlight-style: breeze
+code-block-bg: true
+
+mainfont: 'Atkinson Hyperlegible'
 monofont: 'Fira Code'
+mathfont: 'Noto Sans Math'
+sansfont: RobotoSerifNormalRoman-Medium
+fontsize: 9pt        
+
+fig-align: center
+fig-width: 10
+fig-height: 8
+number-sections: true
+df-print: kable
+cap-location: margin
+
+include-in-header: 
+  text: |
+    \usepackage{fvextra}
+    \usepackage{listings}
+    \usepackage{lstfiracode}
+    \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+    \newfontfamily\sectionfont[]{RobotoSerifNormalRoman-ExtraBold}
+    \newfontfamily\subsectionfont[]{RobotoSerifNormalRoman-Medium}
+    \newfontfamily\subsubsectionfont[]{RobotoSerifNormalRoman-Medium}
+    \addtokomafont{section}{\sectionfont}
+    \addtokomafont{subsection}{\subsectionfont}
+    \addtokomafont{subsubsection}{\subsubsectionfont}
+    \makeatletter
+    \def\verbatim@nolig@list{}
+    \makeatother
+
+reference-location: margin 
+citation-location: margin 
 ---
 
 ------------------------------------------------------------------------
 
+\newpage
 
 # Setup and Data Loading
 
@@ -45,6 +59,10 @@ monofont: 'Fira Code'
 #| results: "hide"
 #| warning: false
 #| message: false 
+knitr::opts_chunk$set(
+  echo = T,
+  dev = "cairo_pdf"
+)
 
 libraries_list <- c(
   "tidyverse",
@@ -114,6 +132,13 @@ tourism_full <- data_main %>%
   )
 ```
 
+`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to apply the tidy forecasting workflow to all 518 time series at once. Its main variables are:
+
+- `index`: `Year`, as in the original data frame.
+- `key`: `Identifier`, a new categorical variable allowing us to transform the data frame into a tidy format; it consists of a set of _labels_ that identify each time series.
+- `value`: the $Y_t$ value for each time series.
+
+
 ```{r melted tsibble}
 tmelt <- reshape2::melt(
   tourism_full, 
@@ -139,12 +164,6 @@ tmelt %>%
 tmelt %>% 
   tail(10)
 ```
-
-`tmelt` (@tbl-tmelt) contains the *melted* data frame, which allows us to apply the tidy forecasting workflow to all 518 time series at once. Its main variables are:
-
-- `index`: `Year`, as in the original data frame.
-- `key`: `Identifier`, a new categorical variable allowing us to transform the data frame into a tidy format; it consists of a set of _labels_ that identify each time series.
-- `value`: the $Y_t$ value for each time series.
 
 # Assignment
 
@@ -181,7 +200,6 @@ tmelt %>%
 #| fig-cap: "Printing a legend for 518 different series is not a viable option. However, color has been used only to differentiate the series and does not contain further information. Plotting the y-axis variable on the log scale was made necessary by the huge variation in the series values; a rug plot on the left-hand side represents the log-transformed distribution of values and allows to determine the overall skewness, position, and asymmetry."
 #| fig-full: 12
 #| fig-height: 12
-#| column: page
 #| warning: false
 tmelt %>% 
   ggplot(
@@ -228,8 +246,7 @@ Using boxplots (@fig-box) allows us to focus on the distribution of values, obta
 #| label: fig-box
 #| fig-cap: "This version of the boxplot, introduced by E. Tufte in 'Visual Display of Quantitative Information' (2001), is interpreted in the following manner: the black lines represent the IQR, with a white space positioned at the median. The black dots indicate the end of the whiskers of the boxplot, extending to 3/2 times the IQR."
 #| fig-width: 12
-#| fig-height: 10
-#| column: page
+#| fig-height: 7
 #| warning: false
 tmelt %>% 
   group_by(
@@ -286,7 +303,6 @@ This grouping stresses the already noted upward trend, except for most series ki
 #| fig-cap: "All series have been grouped by starting year and plotted to achieve more clarity. Each subtitle represents the number of periods for each subset. The same color mapping of @fig-every has been used to differentiate the series. The y-axis scale has been allowed to change freely to enhance the time series patterns visible in each subplot."
 #| fig-width: 12
 #| fig-height: 18
-#| column: page
 #| warning: false
 tmelt %>% 
   group_by(
@@ -593,7 +609,6 @@ MAPE_pairs <- tibble(
 ```{r MAPE scatterplot}
 #| fig-width: 12
 #| fig-height: 9
-#| column: page
 #| fig-cap: "Scatterplot of training and validation MAPE pairs: on both axes, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 ggplot(
   data = MAPE_pairs, 
@@ -635,7 +650,6 @@ MASE_pairs <-
 ```{r MASE scatterplot}
 #| fig-width: 12
 #| fig-height: 9
-#| column: page
 #| fig-cap: "Scatterplot of training and validation MASE pairs: on both axes, the distribution of values. The time series have been colored using the same mapping seen in @fig-every."
 #| label: fig-mase
 ggplot(
@@ -665,7 +679,6 @@ We can add some jitter to better visualize the points:
 ```{r jittered MASE pairs}
 #| fig-width: 12
 #| fig-height: 9
-#| column: page
 #| fig-cap: "Jittered scatterplot of all MASE pairs< same as in @fig-mase, but with added noise to split the cluster."
 ggplot(
   data =
