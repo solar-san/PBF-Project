@@ -666,7 +666,7 @@ We can add some jitter to better visualize the points:
 #| fig-width: 12
 #| fig-height: 9
 #| column: page
-#| fig-cap: "Jittered scatterplot of all MASE pairs< same as in @fig-mase, but with added noise to split the cluster."
+#| fig-cap: "Jittered scatterplot of all MASE pairs: same as in @fig-mase, but with added noise to separate the cluster."
 ggplot(
   data =
     MASE_pairs,
